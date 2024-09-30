@@ -10,7 +10,7 @@
 classdef PR2Left < RobotBaseClass
     
     properties(Access = public)              
-        plyFileNameStem = 'plyFiles/PR2/PR2';  
+        plyFileNameStem = 'plyFiles/PR2Left/PR2';  
     end
     
     methods
