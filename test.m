@@ -1,11 +1,26 @@
-% Load PR2 model
-PR2;
-figure;
-left.teach(qz, 'workspace', [-1.5 1.5 -1.5 1.5 -1 1.5]);
+clc;
+clf;
 
-hold on;
+grid on;
+hold on
+axis([-4 4 -2 2 -2 2]);
 
-right.teach(qz, 'workspace', [-1.5 1.5 -1.5 1.5 -1 1.5]);
+% Create the PR2 robot model
+pr2Left = PR2Left();
 
-hold off; 
+% Set up lighting and shading
+light('Position', [1 1 1], 'Style', 'infinite');
+lighting gouraud;  
+material shiny;   
+camlight('headlight');
+camlight('left');
+
+qz = [0 pi/2 0 0 0 0 0];
+pr2Left.model.teach();
+
+hold off;
+
+
+                 
+
 
