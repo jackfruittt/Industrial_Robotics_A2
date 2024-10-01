@@ -1,0 +1,86 @@
+clf;
+clc;
+grid on;
+axis([-3 3 -3 3 0 3]);
+hold on;
+
+% Create an instance of EnvironmentLoader
+env = EnvironmentLoader();
+%qlim = env.LinearUR3Model.model.qlim;
+original_qlim = env.LinearUR3Model.model.links(1).qlim;
+env.LinearUR3Model.model.links(1).qlim = [0, 0];
+% Interpolation type (1 = Quintic Polynomial, 2 = Trapezoidal Velocity)
+interpolation = 1; 
+steps = 50;       
+
+T1 = transl(0,-0.4,0.8);                                                  % Create translation matrix
+q1 = env.LinearUR3Model.model.ikcon(T1)                                                        % Derive joint angles for required end-effector transformation
+T2 = transl(0,0.4,1.8);                                                   % Define a translation matrix            
+q2 = env.LinearUR3Model.model.ikcon(T2)                                                        % Use inverse kinematics to get the joint angles
+disp(['Size of q1: ', num2str(size(q1))]);
+disp(['Size of q2: ', num2str(size(q2))]);
+
+%% Interpolate joint angles, also calculate relative velocity, accleration
+% Interpolate joint angles between q1 and q2
+%{
+numSteps = 100;
+for i = 1:numSteps
+    % Compute intermediate joint angles
+    alpha = (i - 1) / (numSteps - 1);  % Interpolation parameter between 0 and 1
+    q = (1 - alpha) * q1 + alpha * q2;
+    
+    % Update the robot's position
+    env.LinearUR3Model.model.animate(q);
+    
+    % Pause to create the animation effect
+    pause(0.05);  % Adjust the pause duration to control animation speed
+end
+
+
+%% Plot the results
+figure(1)
+env.LinearUR3Model.model.plot(qMatrix,'trail','r-')                                             % Plot the motion between poses, draw a red line of the end-effector path
+env.LinearUR3Model.model.links(1).qlim = original_qlim;
+figure(2)
+for i = 1:7
+    subplot(3,2,i)
+    plot(qMatrix(:,i),'k','LineWidth',1)
+    title(['Joint ', num2str(i)])
+    xlabel('Step')
+    ylabel('Joint Angle (rad)')
+    refline(0,qlim(i,1))                                                    
+    refline(0,qlim(i,2))
+end
+
+figure(3)
+for i = 1:7
+    subplot(3,2,i)
+    plot(velocity(:,i),'k','LineWidth',1)
+    title(['Joint ', num2str(i)])
+    xlabel('Step')
+    ylabel('Joint Velocity')
+end
+
+figure(4)
+for i = 1:7
+    subplot(3,2,i)
+    plot(acceleration(:,i),'k','LineWidth',1)
+    title(['Joint ', num2str(i)])
+    xlabel('Step')
+    ylabel('Joint Acceleration')
+end
+
+%{
+q1 =
+   -0.0160    0.7448   -1.4597   -1.1237   -5.2705   -1.5708   -0.7449
+q2 =
+   -0.1667   -0.5680   -0.0005    0.0007   -1.4162   -1.5708    0.5681
+Unable to perform assignment because the indices on the left side are not compatible with the size of the right side.
+Error in main (line 44)
+                qMatrix(i,:) = (1-s(i))*q1 + s(i)*q2;                   	% Generate interpolated joint angles 
+
+q1 =
+   -0.4382    0.2842   -0.7392    0.0000    0.4550    0.4382
+q2 =
+    0.9113   -0.5942   -0.0178    0.0000    0.6120   -0.9113
+%}
