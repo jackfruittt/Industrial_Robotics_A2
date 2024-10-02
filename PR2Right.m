@@ -46,6 +46,7 @@ classdef PR2Right < RobotBaseClass
             link(5).qlim = [deg2rad(-180) deg2rad(180)];
             link(6).qlim = [deg2rad(0) deg2rad(130)];
             link(7).qlim = [deg2rad(-180) deg2rad(180)];
+            
 
             self.model = SerialLink(link, 'name', self.name);
         end
