@@ -9,6 +9,10 @@ classdef EnvironmentLoader
     properties
         pr2Right
         pr2Left
+        gripperl1
+        gripperr1
+        gripperl2
+        gripperr2
     end
     
     methods
@@ -20,6 +24,10 @@ classdef EnvironmentLoader
             if compEnv
                 obj.pr2Left = PR2Left();
                 obj.pr2Right = PR2Right();
+                obj.gripperl1 = PR2LeftGripper();
+                obj.gripperr1 = PR2RightGripper();
+                obj.gripperl2 = PR2LeftGripper();
+                obj.gripperr2 = PR2RightGripper();
                 light('Position', [1 1 1], 'Style', 'infinite');
                 lighting gouraud;  
                 material shiny;   
