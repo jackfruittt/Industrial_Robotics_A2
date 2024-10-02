@@ -57,16 +57,18 @@ classdef EnvironmentLoader
         end
 
         function loadCustomObjects(obj)
-            % Load table one
-            tableOneRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/tableBrown2.1x1.4x0.5m.ply', [0, 0, 0], 1, tableOneRotations);
-
-            % Load floor texture
-            surf([-4, -4; 4, 4] ...
-                ,[-2, 2; -2, 2] ...
-                ,[0.01, 0.01; 0.01, 0.01] ...
-                ,'CData', imread('images/floor_wood.jpg') ...
-                ,'FaceColor', 'texturemap');
+            % % Load table one
+            % tableOneRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            % obj.CustomPlaceObject('plyFiles/Scenery/tableBrown2.1x1.4x0.5m.ply', [0, 0, 0], 1, tableOneRotations);
+            % 
+            % % Load floor texture
+            % surf([-4, -4; 4, 4] ...
+            %     ,[-2, 2; -2, 2] ...
+            %     ,[0.01, 0.01; 0.01, 0.01] ...
+            %     ,'CData', imread('images/floor_wood.jpg') ...
+            %     ,'FaceColor', 'texturemap');
+            kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v11.1.ply',[2, 0, 0], 1, kitchenRotations)
         end
         
         %Custom PlaceObject function that plots ply files based off the RTB PlaceObject function.
