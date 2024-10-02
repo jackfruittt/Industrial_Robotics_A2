@@ -9,15 +9,35 @@ classdef EnvironmentLoader
     properties
         pr2Right
         pr2Left
+        gripperl1
+        gripperr1
+        gripperl2
+        gripperr2
     end
     
     methods
         
         function obj = EnvironmentLoader() % Constructor to initialize the environment
-            %Load Complete UR3 + Gripper
-            
+            %
+            obj.loadCustomObjects();
             compEnv = 1;
             if compEnv
+                obj.pr2Left = PR2Left();
+                obj.pr2Right = PR2Right();
+                obj.gripperl1 = PR2LeftGripper();
+                obj.gripperr1 = PR2RightGripper();
+                obj.gripperl2 = PR2LeftGripper();
+                obj.gripperr2 = PR2RightGripper();
+                light('Position', [1 1 1], 'Style', 'infinite');
+                lighting gouraud;  
+                material shiny;   
+                camlight('headlight');
+                camlight('left');
+                
+                qz = [0 pi/2 0 0 0 0 0];
+                obj.pr2Left.model.animate(qz);
+                obj.pr2Right.model.animate(qz);
+            else
                 obj.pr2Left = PR2Left();
                 obj.pr2Right = PR2Right();
                 light('Position', [1 1 1], 'Style', 'infinite');
@@ -33,10 +53,20 @@ classdef EnvironmentLoader
                 obj.pr2Right.model.teach(tr);
                 obj.pr2Left.model.animate(qz);
                 obj.pr2Right.model.animate(qz);
-            else
-            %For transformation handling 
-                
             end
+        end
+
+        function loadCustomObjects(obj)
+            % Load table one
+            tableOneRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/tableBrown2.1x1.4x0.5m.ply', [0, 0, 0], 1, tableOneRotations);
+
+            % Load floor texture
+            surf([-4, -4; 4, 4] ...
+                ,[-2, 2; -2, 2] ...
+                ,[0.01, 0.01; 0.01, 0.01] ...
+                ,'CData', imread('images/floor_wood.jpg') ...
+                ,'FaceColor', 'texturemap');
         end
         
         %Custom PlaceObject function that plots ply files based off the RTB PlaceObject function.
