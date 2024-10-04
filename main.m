@@ -39,7 +39,7 @@ Tb4l = transl(0.99, 0.294, 0.286);
 % pr2.RightGripperClose(numSteps);
 % pr2.RightGripperOpen(numSteps);
 
-pr2.bothGripperClose(50);
+%pr2.bothGripperClose(50);
 pr2.animatePR2ArmsAndGrippers(homePosr, Tbr, homePosl, Tbl, numSteps);
 pr2.LeftGripperOpen(50);
 pr2.LeftGripperClose(50);

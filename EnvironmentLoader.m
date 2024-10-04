@@ -59,7 +59,7 @@ classdef EnvironmentLoader
         function loadCustomObjects(obj)
             % Load table one
             tableOneRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/tableBrown2.1x1.4x0.5m.ply', [0, 0, 0], 1, tableOneRotations);
+            obj.CustomPlaceObject('plyFiles/Scenery/tableBrown2.1x1.4x0.5m.ply', [1.2, 0, 0], 1, tableOneRotations);
 
             % Load floor texture
             surf([-4, -4; 4, 4] ...
