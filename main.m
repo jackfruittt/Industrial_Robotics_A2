@@ -8,7 +8,7 @@ axis([-4 4 -2 2 0 2]);
 % Load environment
 env = EnvironmentLoader();
 pr2 = pr2Control(env);
-view(90, 30);  
+view(90, 10);  
 
 gripperLeftState = 'closed';
 gripperRightState = 'closed';
