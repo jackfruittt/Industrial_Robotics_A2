@@ -21,7 +21,7 @@ classdef PR2Left < RobotBaseClass
             if nargin < 1
                 baseTr = eye(4);  
             end
-            heightAdjustment = transl(0, 0, -0.71); 
+            heightAdjustment = transl(0, -0.22, -0.71); 
             rotationAdjustment = trotx(pi); 
 
             self.model.base = baseTr * rotationAdjustment * heightAdjustment; 
@@ -40,7 +40,7 @@ classdef PR2Left < RobotBaseClass
             link(7) = Link([0      0.0      0        0             0]);
             
             link(1).qlim = [deg2rad(-130) deg2rad(40)];
-            link(2).qlim = [deg2rad(40) deg2rad(132)];
+            link(2).qlim = [deg2rad(30) deg2rad(140)]; %Willow Garage spcifies [-30 80], ROS specifies [60 170], [30 140] seems best for MATLAB and fits within 110-deg range
             link(3).qlim = [deg2rad(-224) deg2rad(44)];
             link(4).qlim = [deg2rad(0) deg2rad(133)];
             link(5).qlim = [deg2rad(-180) deg2rad(180)];
