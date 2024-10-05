@@ -13,10 +13,10 @@ laser = pr2Laser();
 gripperLeftState = 'closed';
 gripperRightState = 'closed';
 
-sensor_position = [0, 0, 1.2]; 
-centerPoint = [0.85, 0, 0.5]; 
-radii = [0.1, 0.3, 0.1]; 
-laser_rotation = deg2rad(49);
+sensor_position = [0.125, 0, 0.9]; 
+centerPoint = [0.85, 0, 0.42]; 
+radii = [0.1, 0.2, 0.08]; 
+laser_rotation = deg2rad(57);
 
 numSteps = 30; 
 homePosr = transl(0.821, -0.440, 1);
@@ -55,15 +55,8 @@ fprintf('Last Coordinate: (%.2f, %.2f, %.2f)\n', lastCoord(1), lastCoord(2), las
 %Create T-matrices for the banana start and end
 bananaR = transl(firstCoord);
 bananaL = transl(lastCoord);
-
-%Move to banana
-pr2.animatePR2ArmsAndGrippers(Tb3r, bananaR, Tb3l, bananaL, numSteps);
-pr2.animatePR2ArmsAndGrippers(bananaR, Tb3r, bananaL, Tb3l, numSteps);
-
 %pr2.animatePR2ArmsAndGripperswithMotionControl(Tb3r, bananaR, Tb3l, bananaL, numSteps);
 %pr2.animatePR2ArmsAndGripperswithMotionControl(bananaR, Tb3r, bananaL, Tb3l, numSteps);
-
-
 pr2.LeftGripperOpen(50);
 pr2.LeftGripperClose(50);
 pr2.RightGripperOpen(50);
@@ -71,11 +64,14 @@ pr2.RightGripperClose(50);
 pr2.bothGripperOpen(50);
 pr2.bothGripperClose(50);
 pr2.LeftGripperOpen(50);
+pr2.animatePR2ArmsAndGrippers(Tb3r, Tbr, Tb3l, Tbl, numSteps);
 pr2.animatePR2ArmsAndGrippers(Tbr, Tb2r, Tbl, Tb2l, numSteps);
 pr2.animateRightPR2ArmsAndGrippers(Tb2r, Tb3r, numSteps);
 pr2.RightGripperOpen(50);
 pr2.animateLeftPR2ArmsAndGrippers(Tb2l, Tb3l, numSteps);
-pr2.animatePR2ArmsAndGrippers(Tb3r, Tb4r, Tb3l, Tb4l, numSteps)
+
+%Move to banana
+pr2.animatePR2ArmsAndGrippers(Tb3r, bananaR, Tb3l, bananaL, numSteps);
 pr2.bothGripperClose(50);
 
 
