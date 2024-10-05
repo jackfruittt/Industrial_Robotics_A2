@@ -60,8 +60,8 @@ bananaL = transl(lastCoord);
 pr2.animatePR2ArmsAndGrippers(Tb3r, bananaR, Tb3l, bananaL, numSteps);
 pr2.animatePR2ArmsAndGrippers(bananaR, Tb3r, bananaL, Tb3l, numSteps);
 
-pr2.animatePR2ArmsAndGripperswithMotionControl(Tb3r, bananaR, Tb3l, bananaL, numSteps);
-pr2.animatePR2ArmsAndGripperswithMotionControl(bananaR, Tb3r, bananaL, Tb3l, numSteps);
+%pr2.animatePR2ArmsAndGripperswithMotionControl(Tb3r, bananaR, Tb3l, bananaL, numSteps);
+%pr2.animatePR2ArmsAndGripperswithMotionControl(bananaR, Tb3r, bananaL, Tb3l, numSteps);
 
 
 pr2.LeftGripperOpen(50);
