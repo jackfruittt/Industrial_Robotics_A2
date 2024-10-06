@@ -13,6 +13,7 @@ classdef EnvironmentLoader
         gripperr1
         gripperl2
         gripperr2
+        gripperrk
     end
     
     methods
@@ -28,6 +29,7 @@ classdef EnvironmentLoader
                 obj.gripperr1 = PR2RightGripper();
                 obj.gripperl2 = PR2LeftGripper();
                 obj.gripperr2 = PR2RightGripper();
+                obj.gripperrk = PR2RightGripperWithKnife();
                 light('Position', [1 1 1], 'Style', 'infinite');
                 lighting gouraud;  
                 material shiny;   

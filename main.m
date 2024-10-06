@@ -45,7 +45,7 @@ Tb4l = transl(0.99, 0.294, 0.286);
 % pr2.RightGripperOpen(numSteps);
 
 %pr2.bothGripperClose(50);
-pr2.animatePR2ArmsAndGrippers(homePosr, Tb3r, homePosl, Tb3l, numSteps);
+pr2.animatePR2ArmsAndGrippers(homePosr, Tb2r, homePosl, Tb3l, numSteps);
 
 %Scan for the banana
 [firstCoord, lastCoord] = laser.laser_scan(sensor_position, laser_rotation, radii, centerPoint);
@@ -60,9 +60,11 @@ bananaL = transl(lastCoord);
 pr2.LeftGripperOpen(50);
 pr2.LeftGripperClose(50);
 pr2.RightGripperOpen(50);
-pr2.RightGripperClose(50);
-pr2.bothGripperOpen(50);
-pr2.bothGripperClose(50);
+pr2.RightGripperWithKnifeClose(50);
+pr2.animateRightPR2ArmsAndGrippersWithKnife(Tb2r, Tb3r, numSteps);
+%pr2.RightGripperClose(50);
+%pr2.bothGripperOpen(50);
+%pr2.bothGripperClose(50);
 pr2.LeftGripperOpen(50);
 pr2.animatePR2ArmsAndGrippers(Tb3r, Tbr, Tb3l, Tbl, numSteps);
 pr2.animatePR2ArmsAndGrippers(Tbr, Tb2r, Tbl, Tb2l, numSteps);
