@@ -28,11 +28,11 @@ classdef EnvironmentLoader
                 obj.gripperr1 = PR2RightGripper();
                 obj.gripperl2 = PR2LeftGripper();
                 obj.gripperr2 = PR2RightGripper();
-                light('Position', [1 1 1], 'Style', 'infinite');
-                lighting gouraud;  
-                material shiny;   
-                camlight('headlight');
-                camlight('left');
+                % light('Position', [1 1 1], 'Style', 'infinite');
+                % lighting gouraud;  
+                % material shiny;   
+                % camlight('headlight');
+                % camlight('left');
                 
                 qz = [0 pi/2 0 0 0 0 0];
                 obj.pr2Left.model.animate(qz);
@@ -40,11 +40,11 @@ classdef EnvironmentLoader
             else
                 obj.pr2Left = PR2Left();
                 obj.pr2Right = PR2Right();
-                light('Position', [1 1 1], 'Style', 'infinite');
-                lighting gouraud;  
-                material shiny;   
-                camlight('headlight');
-                camlight('left');
+                % light('Position', [1 1 1], 'Style', 'infinite');
+                % lighting gouraud;  
+                % material shiny;   
+                % camlight('headlight');
+                % camlight('left');
                 
                 qz = [0 pi/2 0 0 0 0 0];
                 tr = obj.pr2Right.model.fkine(qz);
@@ -68,7 +68,13 @@ classdef EnvironmentLoader
             %     ,'CData', imread('images/floor_wood.jpg') ...
             %     ,'FaceColor', 'texturemap');
             kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v11.1.ply',[2, 0, 0], 1, kitchenRotations)
+            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0.2, 0, 0.28], 1, kitchenRotations)
+
+            bananaRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, -0.8, 1.1], 1, bananaRotations)
+
+            hazardLightRotations = { {0, 'XY'}, {0, 'XZ'}, {-90, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/hazard_light.ply',[1.0, -2.15, 1.8], 0.1, hazardLightRotations);
         end
         
         %Custom PlaceObject function that plots ply files based off the RTB PlaceObject function.
@@ -136,9 +142,10 @@ classdef EnvironmentLoader
         function setupLighting(~)
                  
             delete(findall(gcf, 'Type', 'light'));
-            camlight('headlight');  % Light that moves with the camera
-            lighting gouraud;  % Options: 'flat', 'gouraud'
-            material dull;  % Options: 'shiny', 'dull', 'metal'
+            %camlight('headlight');  % Light that moves with the camera
+            %lighting gouraud;  % Options: 'flat', 'gouraud'
+            %lighting flat;  % Options: 'flat', 'gouraud'
+            %material dull;  % Options: 'shiny', 'dull', 'metal'
         
         end
     end
