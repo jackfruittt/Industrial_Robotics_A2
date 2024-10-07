@@ -1,6 +1,6 @@
 classdef PR2Base < RobotBaseClass
     properties(Access = public)
-        plyFileNameStem = 'PR2Base';
+        plyFileNameStem = 'plyFiles/PR2PrismaticBase/Base';
     end
 
     methods
