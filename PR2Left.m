@@ -52,4 +52,3 @@ classdef PR2Left < RobotBaseClass
         end
     end
 end
-
