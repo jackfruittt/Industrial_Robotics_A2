@@ -7,7 +7,7 @@ classdef TM5900 < RobotBaseClass
     % that this matches the real robot!
 
     properties(Access = public)   
-        plyFileNameStem = 'TM5900';
+        plyFileNameStem = 'plyFiles/TM5900/TM5900';
     end
     
     methods
