@@ -98,6 +98,41 @@ classdef pr2Control
                 drawnow(); % Update the figure
             end
         end
+
+        function animateRightPR2ArmsAndGrippersWithWaypoints(robot, qWaypoints, numSteps, eStop)
+            global gripperRightState;
+            
+            offset = troty(-pi/2) * transl(0.05, 0, 0); 
+            
+            %Use Spline Tracjectory for smooth velocity and acceleration between waypoints
+            % Time vector for the waypoints and interp
+            tWaypoints = linspace(0, 1, size(qWaypoints, 1));  
+            tInterp = linspace(0, 1, numSteps);  
+        
+            qMatrix = zeros(numSteps, size(qWaypoints, 2));
+        
+            % Spline interpolation for each joint
+            for jointIdx = 1:size(qWaypoints, 2)
+                % Interpolate each joint angle using cubic splines
+                qMatrix(:, jointIdx) = spline(tWaypoints, qWaypoints(:, jointIdx), tInterp);
+            end
+            
+            for i = 1:numSteps
+                robot.checkPause(eStop); 
+                
+                robot.env.pr2Right.model.animate(qMatrix(i, :)); 
+                
+                T_rightEndEffector = robot.env.pr2Right.model.fkine(qMatrix(i, :)).T;
+        
+                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+        
+                robot.animateGrippers(robot.env.gripperl2, robot.env.gripperr2, gripperRightState);
+                
+                drawnow();
+            end
+        end
+        
         
         function animateLeftPR2ArmsAndGrippers(robot, leftStartPos, leftEndPos, numSteps, eStop)
             global gripperLeftState;

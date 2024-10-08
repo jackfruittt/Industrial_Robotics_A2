@@ -21,7 +21,7 @@ classdef EnvironmentLoader
         function obj = EnvironmentLoader() % Constructor to initialize the environment
             %
             obj.loadCustomObjects();
-            compEnv = 1;
+            compEnv = 0;
             if compEnv
                 obj.pr2Left = PR2Left();
                 obj.pr2Right = PR2Right();
@@ -42,6 +42,10 @@ classdef EnvironmentLoader
             else
                 obj.pr2Left = PR2Left();
                 obj.pr2Right = PR2Right();
+                obj.gripperl1 = PR2LeftGripper();
+                obj.gripperr1 = PR2RightGripper();
+                obj.gripperl2 = PR2LeftGripper();
+                obj.gripperr2 = PR2RightGripper();
                 light('Position', [1 1 1], 'Style', 'infinite');
                 lighting gouraud;  
                 material shiny;   
