@@ -1,5 +1,6 @@
 clf;
 clc;
+%{
 grid on;
 hold on;
 axis([-4 4 -2 2 0 2]);
@@ -49,5 +50,38 @@ for t = 1:50  % Adjust the number of steps as needed
     pause(0.1);  % Adjust pause to control the speed of the animation
 end
 
+%}
+
+
+% Load the knife and place it initially
+knife = PlaceObject('plyFiles/Scenery/knife.ply', [0 0 0]);  % Initial placement
+
+% Initialize UR5 robot
+ur5Robot = UR5;
+
+% Get the initial knife vertices
+knifeVertices = get(knife, 'Vertices');
+
+% Perform animation
+qMatrix = jtraj([0,0,0,0,0,0], [-pi/4, -pi/4, pi/4, pi/4, pi/4, pi/4], 50);
+
+for i = 1:50
+    % Animate the UR5
+    ur5Robot.model.animate(qMatrix(i,:));
     
+    % Update the knife position according to the UR5 end effector
+    endEffectorPose = ur5Robot.model.fkine(qMatrix(i,:)).T;  % Get current end-effector pose
+
+    % Homogenize the knife vertices (convert to 4x1 vector)
+    knifeVerticesHomogeneous = [knifeVertices, ones(size(knifeVertices, 1), 1)]; 
+
+    % Apply the end-effector transformation to the knife vertices
+    transformedVertices = (endEffectorPose * knifeVerticesHomogeneous')';
+
+    % Remove the homogenizing column and update the knife object
+    set(knife, 'Vertices', transformedVertices(:, 1:3));
+
+    % Render the updated scene
+    drawnow();
+end
 

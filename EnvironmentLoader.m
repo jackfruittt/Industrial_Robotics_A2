@@ -13,6 +13,7 @@ classdef EnvironmentLoader
         gripperr1
         gripperl2
         gripperr2
+        gripperrk
     end
     
     methods
@@ -20,7 +21,7 @@ classdef EnvironmentLoader
         function obj = EnvironmentLoader() % Constructor to initialize the environment
             %
             obj.loadCustomObjects();
-            compEnv = 1;
+            compEnv = 0;
             if compEnv
                 obj.pr2Left = PR2Left();
                 obj.pr2Right = PR2Right();
@@ -28,6 +29,7 @@ classdef EnvironmentLoader
                 obj.gripperr1 = PR2RightGripper();
                 obj.gripperl2 = PR2LeftGripper();
                 obj.gripperr2 = PR2RightGripper();
+                obj.gripperrk = PR2RightGripperWithKnife();
                 light('Position', [1 1 1], 'Style', 'infinite');
                 lighting gouraud;  
                 material shiny;   
@@ -40,6 +42,10 @@ classdef EnvironmentLoader
             else
                 obj.pr2Left = PR2Left();
                 obj.pr2Right = PR2Right();
+                obj.gripperl1 = PR2LeftGripper();
+                obj.gripperr1 = PR2RightGripper();
+                obj.gripperl2 = PR2LeftGripper();
+                obj.gripperr2 = PR2RightGripper();
                 light('Position', [1 1 1], 'Style', 'infinite');
                 lighting gouraud;  
                 material shiny;   
@@ -68,7 +74,7 @@ classdef EnvironmentLoader
             %     ,'CData', imread('images/floor_wood.jpg') ...
             %     ,'FaceColor', 'texturemap');
             kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v11.1.ply',[0.6, 0, -1.1], 1, kitchenRotations)
+            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v11.1.ply',[0.80, 0, -1.1], 1, kitchenRotations)
         end
         
         %Custom PlaceObject function that plots ply files based off the RTB PlaceObject function.
@@ -136,9 +142,10 @@ classdef EnvironmentLoader
         function setupLighting(~)
                  
             delete(findall(gcf, 'Type', 'light'));
-            camlight('headlight');  % Light that moves with the camera
-            lighting gouraud;  % Options: 'flat', 'gouraud'
-            material dull;  % Options: 'shiny', 'dull', 'metal'
+            %camlight('headlight');  % Light that moves with the camera
+            %lighting gouraud;  % Options: 'flat', 'gouraud'
+            %lighting flat;  % Options: 'flat', 'gouraud'
+            %material dull;  % Options: 'shiny', 'dull', 'metal'
         
         end
     end
