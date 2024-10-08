@@ -73,7 +73,13 @@ classdef EnvironmentLoader
             %     ,'CData', imread('images/floor_wood.jpg') ...
             %     ,'FaceColor', 'texturemap');
             kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v11.1.ply',[0.80, 0, -1.1], 1, kitchenRotations)
+            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0, 0, -0.38], 1, kitchenRotations)
+
+            boardRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/cutting_board.ply',[0.8, 0, 0.40], 1, boardRotations)
+
+            bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/banana.ply',[0.8, 0, 0.45], 1, bananaRotations)
         end
         
         %Custom PlaceObject function that plots ply files based off the RTB PlaceObject function.
