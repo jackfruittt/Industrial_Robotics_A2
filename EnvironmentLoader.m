@@ -142,9 +142,10 @@ classdef EnvironmentLoader
         function setupLighting(~)
                  
             delete(findall(gcf, 'Type', 'light'));
-            camlight('headlight');  % Light that moves with the camera
-            lighting gouraud;  % Options: 'flat', 'gouraud'
-            material dull;  % Options: 'shiny', 'dull', 'metal'
+            %camlight('headlight');  % Light that moves with the camera
+            %lighting gouraud;  % Options: 'flat', 'gouraud'
+            %lighting flat;  % Options: 'flat', 'gouraud'
+            %material dull;  % Options: 'shiny', 'dull', 'metal'
         
         end
     end
