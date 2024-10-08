@@ -1,6 +1,6 @@
 classdef PR2LeftArm < RobotBaseClass
     properties(Access = public)
-        plyFileNameStem = 'PR2';
+        plyFileNameStem = 'plyFiles/PR2LeftNew/PR2';
     end
 
     methods
@@ -9,7 +9,10 @@ classdef PR2LeftArm < RobotBaseClass
             if nargin < 1 
                 baseTr = eye(4);
             end
-            self.model.base = baseTr; 
+
+            heightAdjustment = transl(-0.1, 0.18, 0.2);
+
+            self.model.base = baseTr * heightAdjustment; 
             self.PlotAndColourRobot();
         end
 

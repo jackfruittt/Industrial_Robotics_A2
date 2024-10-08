@@ -9,7 +9,11 @@ classdef PR2Base < RobotBaseClass
             if nargin < 1 
                 baseTr = eye(4);
             end
-            self.model.base = baseTr; 
+
+            rotationAdjustment = trotx(pi);
+            heightAdjustment = transl(0,0,-1.025);
+
+            self.model.base = baseTr * rotationAdjustment * heightAdjustment; 
             self.PlotAndColourRobot();
         end
 

@@ -7,8 +7,12 @@
 classdef EnvironmentLoader
     
     properties
-        pr2Right
-        pr2Left
+        % Make pr2Prismatic base + Arms
+        pr2Base
+        pr2LeftArm
+        pr2RightArm
+        %pr2Right
+        %pr2Left
         gripperl1
         gripperr1
         gripperl2
@@ -22,8 +26,12 @@ classdef EnvironmentLoader
             obj.loadCustomObjects();
             compEnv = 1;
             if compEnv
-                obj.pr2Left = PR2Left();
-                obj.pr2Right = PR2Right();
+                % Make pr2Prismatic base + Arms
+                obj.pr2Base = PR2Base();
+                obj.pr2LeftArm = PR2LeftArm(obj.pr2Base.model.base.T);
+                obj.pr2RightArm = PR2RightArm(obj.pr2Base.model.base.T);
+                %obj.pr2Left = PR2Left();
+                %obj.pr2Right = PR2Right();
                 obj.gripperl1 = PR2LeftGripper();
                 obj.gripperr1 = PR2RightGripper();
                 obj.gripperl2 = PR2LeftGripper();
@@ -34,9 +42,11 @@ classdef EnvironmentLoader
                 % camlight('headlight');
                 % camlight('left');
                 
-                qz = [0 pi/2 0 0 0 0 0];
-                obj.pr2Left.model.animate(qz);
-                obj.pr2Right.model.animate(qz);
+                qz = [0 0 0 0 0 0 0];
+                obj.pr2LeftArm.model.animate(qz);
+                obj.pr2RightArm.model.animate(qz);
+                %obj.pr2Left.model.animate(qz);
+                %obj.pr2Right.model.animate(qz);
             else
                 obj.pr2Left = PR2Left();
                 obj.pr2Right = PR2Right();
@@ -68,10 +78,10 @@ classdef EnvironmentLoader
             %     ,'CData', imread('images/floor_wood.jpg') ...
             %     ,'FaceColor', 'texturemap');
             kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0.2, 0, 0.28], 1, kitchenRotations)
+            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0.2, 0, 0], 1, kitchenRotations)
 
             bananaRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, -0.8, 1.1], 1, bananaRotations)
+            obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, -0.8, 0.82], 1, bananaRotations)
 
             hazardLightRotations = { {0, 'XY'}, {0, 'XZ'}, {-90, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/hazard_light.ply',[1.0, -2.15, 1.8], 0.1, hazardLightRotations);

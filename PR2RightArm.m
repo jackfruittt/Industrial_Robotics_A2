@@ -1,6 +1,6 @@
 classdef PR2RightArm < RobotBaseClass
     properties(Access = public)
-        plyFileNameStem = 'PR2';
+        plyFileNameStem = 'plyFiles/PR2RightNew/PR2';
     end
 
     methods
@@ -10,8 +10,9 @@ classdef PR2RightArm < RobotBaseClass
                 baseTr = eye(4);
             end
             
-            self.model.base = baseTr; 
+            heightAdjustment = transl(-0.1, -0.18, 0.2);
 
+            self.model.base = baseTr * heightAdjustment; 
             self.PlotAndColourRobot();
         end
 

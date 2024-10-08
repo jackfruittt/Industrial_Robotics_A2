@@ -9,6 +9,8 @@ axis([-4 4 -2 2 0 2]);
 env = EnvironmentLoader();
 view(30, 20);  
 
+%%
+
 function animatePR2ArmsAndGrippers(env, homePosr, Tbr, homePosl, Tbl, numSteps)
     offset = troty(-pi/2) * transl(0.05, 0, 0); 
     
