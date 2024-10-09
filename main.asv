@@ -34,7 +34,7 @@ function animatePR2ArmsAndGrippers(env, homePosr, Tbr, homePosl, Tbl, numSteps)
     for i = 1:numSteps
         env.pr2RightArm.model.animate(qPrer(i, :)); 
         env.pr2LeftArm.model.animate(qPrel(i, :)); 
-        % This section for gripper transformation
+        
         T_leftEndEffector = env.pr2LeftArm.model.fkine(qPrel(i, :)).T;
         T_rightEndEffector = env.pr2RightArm.model.fkine(qPrer(i, :)).T;
 
@@ -42,7 +42,7 @@ function animatePR2ArmsAndGrippers(env, homePosr, Tbr, homePosl, Tbl, numSteps)
         env.gripperr1.model.base = T_leftEndEffector * offset;
         env.gripperl2.model.base = T_rightEndEffector * offset;
         env.gripperr2.model.base = T_rightEndEffector * offset;
-        % End Section ^
+
         env.gripperl1.model.animate([0 0]);
         env.gripperr1.model.animate([0 0]);
         env.gripperl2.model.animate([0 0]);
@@ -62,8 +62,6 @@ animatePR2ArmsAndGrippers(env, homePosr, Tbr, homePosl, Tbl, numSteps);
 
 
 function animatePR2Base(env, baseStartPos, baseEndPos, numSteps)
-    offset = troty(-pi/2) * transl(0.05, 0, 0);
-
     q1 = env.pr2Base.model.ikcon(baseStartPos);
     q2 = env.pr2Base.model.ikcon(baseEndPos);
 
@@ -84,10 +82,8 @@ function animatePR2Base(env, baseStartPos, baseEndPos, numSteps)
         % Animate the base with the qmatrix
         env.pr2Base.model.animate(qMatrix(i,:));
         qLeft = env.pr2LeftArm.model.getpos();
-
-        % Include Gripper movements with base movements
-        qLeftGripper1 = env.gripperl1.model.base
-        qRightGripper1 = env.gripperr1
+        qLeftGripper1 = env.pr2
+        qRightGr
 
 
         qRight = env.pr2RightArm.model.getpos();

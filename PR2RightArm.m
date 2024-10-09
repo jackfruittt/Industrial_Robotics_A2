@@ -10,8 +10,9 @@ classdef PR2RightArm < RobotBaseClass
                 baseTr = eye(4);
             end
             
-            self.model.base = baseTr; 
+            heightAdjustment = transl(-0.1, -0.18, 0.2);
 
+            self.model.base = baseTr * heightAdjustment; 
             self.PlotAndColourRobot();
         end
 
