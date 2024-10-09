@@ -1,4 +1,7 @@
 function setup()
+    %Update new changes
+    rehash;
+
     % Get the current directory (root of the cloned repository)
     projectRoot = pwd;
 
