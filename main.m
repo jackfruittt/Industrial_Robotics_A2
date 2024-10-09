@@ -10,7 +10,9 @@ view(90, 10);
 eStop = serial('COM3', 'BaudRate', 9600);  
 %fopen(eStop);
 env = EnvironmentLoader();
-%pr2 = pr2Control(env);
+knife = PlaceObject('plyFiles/Scenery/knife.ply', [0.7, -0.75, 0.75]);
+knifeHand = PlaceObject('plyFiles/Scenery/knife_in_hand.ply', [0.7, -0.75, 0.75]);
+knifeVertices = get(knifeHand, 'Vertices');
 robot = robotControl(env);
 laser = pr2Laser();
 gripperLeftState = 'closed';
@@ -18,8 +20,11 @@ gripperRightState = 'closed';
 
 sensor_position = [0.125, 0, 0.9]; 
 centerPoint = [0.85, 0, 0.42]; 
+xLength = centerPoint(1) - sensor_position(1);
+zLength = sensor_position(3) - centerPoint(3);
 radii = [0.1, 0.2, 0.08]; 
-laser_rotation = deg2rad(57);
+laser_rotation = atan(xLength/zLength);
+disp(laser_rotation);
 
 numSteps = 30; 
 homePosr = transl(0.821, -0.440, 1);
@@ -41,100 +46,57 @@ startPos = transl(2, 0.764, 1.092);
 
 endPos = transl(1.885, -0.555, 0.207);
 
-%% TO USE PR2 ANIMATION FUNCTIONS
-% pr2.animateRightPR2ArmsAndGrippers(RightStartPos, RightEndPos, numSteps);
-% pr2.animateLeftPR2ArmsAndGrippers(LeftStartPos, LeftEndPos, numSteps);
-% pr2.animatePR2ArmsAndGrippers(RightStartPos, RightEndPos, LeftStartPos, LeftEndPos, numSteps);
-% pr2.bothGripperClose(numSteps);
-% pr2.LeftGripperOpen(numSteps);
-% pr2.LeftGripperClose(numSteps);
-% pr2.RightGripperClose(numSteps);
-% pr2.RightGripperOpen(numSteps);
+knifePos = transl(0.7, -0.75, 0.75) * troty(pi/2);
 
-%pr2.bothGripperClose(50);
+robot.animatePR2RightArmsAndGrippers(homePosr, Tb2r, numSteps, eStop);
+robot.PR2RightGripperOpen(numSteps, eStop);
+robot.animatePR2RightArmsAndGrippers(Tb2r, knifePos, numSteps, eStop);
+robot.PR2GrabKnife(numSteps, eStop);
 
-%{
-pr2.animatePR2ArmsAndGrippers(homePosr, Tb2r, homePosl, Tb3l, numSteps, eStop);
+offset = troty(-pi/2) * transl(0.05, 0, 0);
+knifeOffset = transl(1.85, 0.85, 0.7) * troty(-pi/2);
+deletePlyObject(knife);
+function movePR2WithObject(env, knifeHand, knifeVertices, startPos, endPos, numSteps, offset, knifeOffset)
 
-% Scan for the banana
-[firstCoord, lastCoord] = laser.laser_scan(sensor_position, laser_rotation, radii, centerPoint);
+    % Calculate the joint trajectory
+    qMatrix = jtraj(env.pr2Right.model.ikcon(startPos), env.pr2Right.model.ikcon(endPos), numSteps);
 
-fprintf('First Coordinate: (%.2f, %.2f, %.2f)\n', firstCoord(1), firstCoord(2), firstCoord(3));
-fprintf('Last Coordinate: (%.2f, %.2f, %.2f)\n', lastCoord(1), lastCoord(2), lastCoord(3));
+    % Loop through each step in the trajectory
+    for i = 1:numSteps
+        % Get the current end effector pose for the right arm
+        T_rightEndEffector = env.pr2Right.model.fkine(qMatrix(i, :)).T;
 
-% Create T-matrices for the banana start and end
-bananaR = transl(firstCoord);
-bananaL = transl(lastCoord);
+        % Set grippers based on the end effector pose with offset
+        env.gripperl2.model.base = T_rightEndEffector * offset;
+        env.gripperr2.model.base = T_rightEndEffector * offset;
 
-pr2.LeftGripperOpen(50, eStop);
-pr2.LeftGripperClose(50, eStop);
-pr2.RightGripperOpen(50, eStop);
-pr2.RightGripperClose(50, eStop);
-pr2.bothGripperOpen(50, eStop);
-pr2.bothGripperClose(50, eStop);
-pr2.LeftGripperOpen(50, eStop);
-pr2.animatePR2ArmsAndGrippers(Tb3r, Tbr, Tb3l, Tbl, numSteps, eStop);
-pr2.animatePR2ArmsAndGrippers(Tbr, Tb2r, Tbl, Tb2l, numSteps, eStop);
-pr2.animateRightPR2ArmsAndGrippers(Tb2r, Tb3r, numSteps, eStop);
-pr2.RightGripperOpen(50, eStop);
-pr2.animateLeftPR2ArmsAndGrippers(Tb2l, Tb3l, numSteps, eStop);
+        % Homogenize the knife vertices (convert to 4x1 vector)
+        knifeVerticesHomogeneous = [knifeVertices, ones(size(knifeVertices, 1), 1)];
 
-% Move to banana
-pr2.animatePR2ArmsAndGrippers(Tb3r, bananaR, Tb3l, bananaL, numSteps, eStop);
-pr2.bothGripperClose(50, eStop);
-pr2.animateRightPR2ArmsAndGrippers(bananaR, homePosr, numSteps, eStop);
-rightStart = transl(0.821, -0.440, 1);
-qRightStart = pr2.env.pr2Right.model.ikcon(rightStart);
-rightWpOne = deg2rad([89.4 90 0 0 0 0 0]);
-rightWpTwo = deg2rad([90 67.2 0 15 0 0 0]);
-rightEnd = transl(0.172, -0.793, 0.269);
-qRightEnd = pr2.env.pr2Right.model.ikcon(rightEnd);
+        % Apply the end-effector transformation to the knife vertices
+        transformedVertices = (knifeOffset * T_rightEndEffector * knifeVerticesHomogeneous')';
 
-qWpMat = [qRightStart; rightWpTwo; rightWpTwo; qRightEnd];
+        % Remove the homogenizing column and update the knife object
+        set(knifeHand, 'Vertices', transformedVertices(:, 1:3));
 
-pr2.animateRightPR2ArmsAndGrippersWithWaypoints(qWpMat, numSteps, eStop);
-%}
+        % Animate the PR2 right arm
+        env.pr2Right.model.animate(qMatrix(i, :));
 
-%{
-robot.animatePR2ArmsAndGrippers(homePosr, Tb2r, homePosl, Tb3l, numSteps, eStop);
+        % Render the updated scene
+        drawnow();
+    end
+end
 
-% Scan for the banana
-[firstCoord, lastCoord] = laser.laser_scan(sensor_position, laser_rotation, radii, centerPoint);
+movePR2WithObject(env, knifeHand, knifeVertices, knifePos, Tb3r, numSteps, offset, knifeOffset);
 
-fprintf('First Coordinate: (%.2f, %.2f, %.2f)\n', firstCoord(1), firstCoord(2), firstCoord(3));
-fprintf('Last Coordinate: (%.2f, %.2f, %.2f)\n', lastCoord(1), lastCoord(2), lastCoord(3));
+movePR2WithObject(env, knifeHand, knifeVertices, Tb3r, Tb4r, numSteps, offset, knifeOffset);
 
-% Create T-matrices for the banana start and end
-bananaR = transl(firstCoord);
-bananaL = transl(lastCoord);
+function deletePlyObject(objectHandle)
 
-robot.PR2LeftGripperOpen(50, eStop);
-robot.PR2LeftGripperClose(50, eStop);
-robot.PR2RightGripperOpen(50, eStop);
-robot.PR2RightGripperClose(50, eStop);
-robot.PR2BothGrippersOpen(50, eStop);
-robot.PR2BothGrippersClose(50, eStop);
-robot.PR2LeftGripperOpen(50, eStop);
-robot.animatePR2ArmsAndGrippers(Tb3r, Tbr, Tb3l, Tbl, numSteps, eStop);
-robot.animatePR2ArmsAndGrippers(Tbr, Tb2r, Tbl, Tb2l, numSteps, eStop);
-robot.animate(Tb2r, Tb3r, numSteps, eStop);
-robot.PR2RightGripperOpen(50, eStop);
-robot.animateLeftPR2ArmsAndGrippers(Tb2l, Tb3l, numSteps, eStop);
-
-% Move to banana
-robot.animatePR2ArmsAndGrippers(Tb3r, bananaR, Tb3l, bananaL, numSteps, eStop);
-robot.PR2BothGrippersClose(50, eStop);
-robot.animatePR2RightArmsAndGrippers(bananaR, homePosr, numSteps, eStop);
-rightStart = transl(0.821, -0.440, 1);
-qRightStart = pr2.env.pr2Right.model.ikcon(rightStart);
-rightWpOne = deg2rad([89.4 90 0 0 0 0 0]);
-rightWpTwo = deg2rad([90 67.2 0 15 0 0 0]);
-rightEnd = transl(0.172, -0.793, 0.269);
-qRightEnd = pr2.env.pr2Right.model.ikcon(rightEnd);
-
-qWpMat = [qRightStart; rightWpTwo; rightWpTwo; qRightEnd];
-
-pr2.animateRightPR2ArmsAndGrippersWithWaypoints(qWpMat, numSteps, eStop);
-%}
-robot.animateTM5(startPos, endPos, numSteps, eStop);
+    if ishandle(objectHandle)
+        delete(objectHandle);
+    else
+        warning('The provided handle is not valid or the object does not exist.');
+    end
+end
 

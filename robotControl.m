@@ -256,6 +256,34 @@ classdef robotControl
                 drawnow();
             end
         end
+
+        function animatePR2RightGripperforKnife(robot, numSteps, openOrClose)
+            global PR2GripperRightState;
+            %robot.PR2GripperRightState;
+            
+            % Define the joint limits
+            qLeftOpen = [deg2rad(18), deg2rad(-18)];
+            qLeftClose = [deg2rad(6), deg2rad(-6)];
+            qRightOpen = [deg2rad(-18), deg2rad(18)];
+            qRightClose = [deg2rad(-6), deg2rad(6)]; 
+            
+            if strcmp(openOrClose, 'open')
+                qMatrixLeft = jtraj(qLeftClose, qLeftOpen, numSteps);
+                qMatrixRight = jtraj(qRightClose, qRightOpen, numSteps);
+                PR2GripperRightState = 'open';
+            else
+                qMatrixLeft = jtraj(qLeftOpen, qLeftClose, numSteps);
+                qMatrixRight = jtraj(qRightOpen, qRightClose, numSteps);
+                PR2GripperRightState = 'closed';
+            end
+            
+            % Animate the gripper opening or closing
+            for i = 1:numSteps
+                robot.env.gripperl2.model.animate(qMatrixLeft(i, :));
+                robot.env.gripperr2.model.animate(qMatrixRight(i, :));
+                drawnow();
+            end
+        end
         
         function PR2LeftGripperOpen(robot, numSteps, eStop)
             robot.checkPause(eStop);
@@ -275,6 +303,16 @@ classdef robotControl
         function PR2RightGripperClose(robot, numSteps, eStop)
             robot.checkPause(eStop);
             robot.animatePR2RightGripper(numSteps, 'close');
+        end
+
+        function PR2GrabKnife(robot, numSteps, eStop)
+            robot.checkPause(eStop);
+            robot.animatePR2RightGripperforKnife(numSteps, 'close');
+        end
+
+        function PR2ReleaseKnife(robot, numSteps, eStop)
+            robot.checkPause(eStop);
+            robot.animatePR2RightGripperforKnife(numSteps, 'open');
         end
         
         function PR2BothGrippersOpen(robot, numSteps, eStop)
@@ -324,7 +362,38 @@ classdef robotControl
                 %robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 
                 drawnow(); % Update the figure
+        end
+
+        function animateTM5WithWaypoints(robot, qWaypoints, numSteps, eStop)
+            
+            %Use Spline Tracjectory for smooth velocity and acceleration between waypoints
+            % Time vector for the waypoints and interp
+            tWaypoints = linspace(0, 1, size(qWaypoints, 1));
+            tInterp = linspace(0, 1, numSteps);
+            
+            qMatrix = zeros(numSteps, size(qWaypoints, 2));
+            
+            % Spline interpolation for each joint
+            for jointIdx = 1:size(qWaypoints, 2)
+                % Interpolate each joint angle using cubic splines
+                qMatrix(:, jointIdx) = spline(tWaypoints, qWaypoints(:, jointIdx), tInterp);
             end
+            
+            for i = 1:numSteps
+                robot.checkPause(eStop);
+                
+                robot.env.tm5900.model.animate(qMatrix(i, :));
+                
+                %T_rightEndEffector = robot.env.pr2Right.model.fkine(qMatrix(i, :)).T;
+                
+                %robot.env.gripperl2.model.base = T_rightEndEffector * offset;
+                %robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                
+                %robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
+                
+                drawnow();
+            end
+        end
             
             
         end

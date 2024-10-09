@@ -49,39 +49,39 @@ for t = 1:50  % Adjust the number of steps as needed
     
     pause(0.1);  % Adjust pause to control the speed of the animation
 end
-
+cowHerd =robotKnife(1);
+ur5Robot = UR5;
+cowHerd.cowModel{1}.base = ur5Robot.model.fkine([0,0,0,0,0,0]);
+cowHerd.cowModel{1}.animate(0)
+cowHerd.cowModel{1}.base = ur5Robot.model.fkine([0,0,0,0,0,0]);
+cowHerd.cowModel{1}.animate(0)
+for i = 1:50
+    ur5Robot.model.animate(qMatrix(i,:));
+    cowHerd.cowModel{1}.base = ur5Robot.model.fkine(qMatrix(i,:));
+    cowHerd.cowModel{1}.animate(0);
+    drawnow()
 %}
 
 
 % Load the knife and place it initially
-knife = PlaceObject('plyFiles/Scenery/knife.ply', [0 0 0]);  % Initial placement
 
-% Initialize UR5 robot
-ur5Robot = UR5;
+% Create an instance of robotKnife
+% Create an instance of robotKnife
+knife = Knife.robotKnife();
 
-% Get the initial knife vertices
-knifeVertices = get(knife, 'Vertices');
+% Define a trajectory for the UR5 robot
+qMatrix = jtraj([0,0,0,0,0,0], [pi/4, -pi/4, pi/4, pi/4, pi/4, pi/4], 50);
 
-% Perform animation
-qMatrix = jtraj([0,0,0,0,0,0], [-pi/4, -pi/4, pi/4, pi/4, pi/4, pi/4], 50);
-
+% Attach the knife to the end effector of the UR5 robot
+ur5Robot = UR5();
 for i = 1:50
-    % Animate the UR5
-    ur5Robot.model.animate(qMatrix(i,:));
+    % Animate UR5 robot
+    ur5Robot.model.animate(qMatrix(i, :));
     
-    % Update the knife position according to the UR5 end effector
-    endEffectorPose = ur5Robot.model.fkine(qMatrix(i,:)).T;  % Get current end-effector pose
-
-    % Homogenize the knife vertices (convert to 4x1 vector)
-    knifeVerticesHomogeneous = [knifeVertices, ones(size(knifeVertices, 1), 1)]; 
-
-    % Apply the end-effector transformation to the knife vertices
-    transformedVertices = (endEffectorPose * knifeVerticesHomogeneous')';
-
-    % Remove the homogenizing column and update the knife object
-    set(knife, 'Vertices', transformedVertices(:, 1:3));
-
-    % Render the updated scene
+    % Attach knife to UR5 end effector
+    knife.attachToEndEffector(ur5Robot.model.fkine(qMatrix(i, :)).T);
+    
+    % Render the scene
     drawnow();
 end
 

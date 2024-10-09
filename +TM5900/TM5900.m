@@ -17,7 +17,7 @@ classdef TM5900 < RobotBaseClass
                 if nargin == 2
                     error('If you set useTool you must pass in the toolFilename as well');
                 elseif nargin == 0 % Nothing passed
-                    baseTr = transl(2,1,0);
+                    baseTr = transl(1,2,0);
                 end
             else % All passed in
                 self.useTool = useTool;
@@ -59,3 +59,4 @@ classdef TM5900 < RobotBaseClass
         end
     end
 end
+

@@ -7,7 +7,7 @@ q = zeros(1,6);
 
 tm5.model.animate(q);
 tm5.model.teach();
-
+%{
 numSteps = 50;
 leftStartPos = transl(0, -0.236, 1.092);
 
@@ -31,3 +31,4 @@ for i = 1:numSteps
     
     drawnow(); %
 end
+%}
