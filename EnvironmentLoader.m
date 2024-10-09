@@ -32,6 +32,9 @@ classdef EnvironmentLoader
                 obj.pr2RightArm = PR2RightArm(obj.pr2Base.model.base.T);
                 %obj.pr2Left = PR2Left();
                 %obj.pr2Right = PR2Right();
+
+                % Left arm is 1, right arm is 2, l and r correspond to
+                % fingers of the gripper
                 obj.gripperl1 = PR2LeftGripper();
                 obj.gripperr1 = PR2RightGripper();
                 obj.gripperl2 = PR2LeftGripper();

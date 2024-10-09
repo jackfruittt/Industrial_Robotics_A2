@@ -25,9 +25,9 @@ classdef pr2Control
 
             for i = 1:numSteps
                 robot.checkPause(eStop);
-                robot.env.pr2Base.model.animate(qMatrix(i,:));
-                drawnow();
+                robot.env.pr2Base.model.animate()
             end
+
         end
 
         function animatePR2ArmsAndGrippers(robot, rightStartPos, rightEndPos, leftStartPos, leftEndPos, numSteps, eStop)
