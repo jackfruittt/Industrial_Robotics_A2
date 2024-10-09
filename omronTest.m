@@ -1,3 +1,6 @@
+clc;
+clf;
+
 tm5 = TM5900.TM5900();
 
 q = zeros(1,6);

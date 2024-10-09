@@ -7,13 +7,18 @@
 classdef EnvironmentLoader
     
     properties
-        pr2Right
-        pr2Left
+
         gripperl1
         gripperr1
         gripperl2
         gripperr2
         gripperrk
+        
+        pr2Right
+        pr2Left
+
+        tm5900
+
     end
     
     methods
@@ -29,11 +34,12 @@ classdef EnvironmentLoader
                 obj.gripperr1 = PR2.PR2RightGripper();
                 obj.gripperl2 = PR2.PR2LeftGripper();
                 obj.gripperr2 = PR2.PR2RightGripper();
-                light('Position', [1 1 1], 'Style', 'infinite');
+                obj.tm5900 = TM5900.TM5900();
+                %light('Position', [1 1 1], 'Style', 'infinite');
                 lighting gouraud;  
-                material shiny;   
-                camlight('headlight');
-                camlight('left');
+                %material dull;   
+                %camlight('headlight');
+                %camlight('left');
                 
                 qz = [0 pi/2 0 0 0 0 0];
                 obj.pr2Left.model.animate(qz);
@@ -45,19 +51,20 @@ classdef EnvironmentLoader
                 obj.gripperr1 = PR2.PR2RightGripper();
                 obj.gripperl2 = PR2.PR2LeftGripper();
                 obj.gripperr2 = PR2.PR2RightGripper();
-                light('Position', [1 1 1], 'Style', 'infinite');
+                obj.tm5900 = TM5900.TM5900();
                 lighting gouraud;  
-                material dull;   
-                camlight('headlight');
-                camlight('left');
                 
                 qz = [0 pi/2 0 0 0 0 0];
+                q = [0 0 0 0 0 0];
                 tr = obj.pr2Right.model.fkine(qz);
                 tr1 = obj.pr2Left.model.fkine(qz);
                 obj.pr2Left.model.teach(tr1);
                 obj.pr2Right.model.teach(tr);
+                obj.tm5900.model.teach();
                 obj.pr2Left.model.animate(qz);
                 obj.pr2Right.model.animate(qz);
+                obj.tm5900.model.animate(q);
+                
             end
         end
 

@@ -5,45 +5,57 @@ classdef TM5900 < RobotBaseClass
     % 41013. No guarentee is made about the accuracy or correctness of the
     % of the DH parameters of the accompanying ply files. Do not assume
     % that this matches the real robot!
-
-    properties(Access = public)   
+    
+    properties(Access = public)
         plyFileNameStem = 'plyFiles/TM5900/TM5900';
     end
     
     methods
-%% Constructor
+        %% Constructor
         function self = TM5900(baseTr,useTool,toolFilename)
             if nargin < 3
                 if nargin == 2
                     error('If you set useTool you must pass in the toolFilename as well');
                 elseif nargin == 0 % Nothing passed
-                    baseTr = transl(0,0,0);  
-                end             
-            else % All passed in 
+                    baseTr = transl(2,1,0);
+                end
+            else % All passed in
                 self.useTool = useTool;
                 toolTrData = load([toolFilename,'.mat']);
                 self.toolTr = toolTrData.tool;
                 self.toolFilename = [toolFilename,'.ply'];
             end
-          
+            
             self.CreateModel();
-			self.model.base = self.model.base.T * baseTr;
+            self.model.base = self.model.base.T * baseTr;
             self.model.tool = self.toolTr;
             self.PlotAndColourRobot();
-
+            
             drawnow
         end
-
-%% CreateModel
+        
+        %% CreateModel
         function CreateModel(self)
-            link(1) = Link('d',0.1452,'a',0,'alpha',-pi/2,'qlim',deg2rad([-360 360]), 'offset',0);
-            link(2) = Link('d',0,'a',0.429,'alpha',0,'qlim', deg2rad([-360 360]), 'offset',-pi/2);
-            link(3) = Link('d',0,'a',0.4115,'alpha',0,'qlim', deg2rad([-360 360]), 'offset', 0);
-            link(4) = Link('d',-0.12230,'a',0,'alpha',pi/2,'qlim',deg2rad([-360 360]),'offset', pi/2);
-            link(5) = Link('d',0.106,'a',0,'alpha',pi/2,'qlim',deg2rad([-360,360]), 'offset',0);
-            link(6) = Link('d',	0.1132,'a',0,'alpha',0,'qlim',deg2rad([-360,360]), 'offset', 0);
-             
-            self.model = SerialLink(link,'name',self.name);
-        end      
+            % Link(         [θ      d          a        αlpha      sigma])
+            link(1) = Link([0      0.1452     0        -pi/2        0]);        
+            link(2) = Link([0      0          0.429    0            0]);      
+            link(3) = Link([0      0          0.4115   0            0]);         
+            link(4) = Link([0     -0.12230    0        pi/2         0]);        
+            link(5) = Link([0      0.106      0        pi/2         0]);        
+            link(6) = Link([0      0.1132     0        0            0]);         
+            
+            link(1).qlim = deg2rad([-360 360]);
+            link(2).qlim = deg2rad([-360 360]);
+            link(3).qlim = deg2rad([-360 360]);
+            link(4).qlim = deg2rad([-360 360]);
+            link(5).qlim = deg2rad([-360 360]);
+            link(6).qlim = deg2rad([-360 360]);
+            
+            link(2).offset = -pi/2;
+            link(4).offset = pi/2;
+            
+            % Create the SerialLink model and assign it a name
+            self.model = SerialLink(link, 'name', self.name);
+        end
     end
 end
