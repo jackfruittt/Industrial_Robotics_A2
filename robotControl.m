@@ -11,17 +11,66 @@ classdef robotControl
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PR2 FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
+        function animatePR2Base(robot, baseStartPos, baseEndPos, numSteps, eStop)
+            offset = troty(-pi/2) * transl(0.05, 0, 0);
+
+            q1 = robot.env.pr2Base.model.ikcon(baseStartPos);
+            q2 = robot.env.pr2Base.model.ikcon(baseEndPos);
+
+            sb = lspb(0, 1, numSteps);
+
+            qMatrix = zeros(numSteps, 3);
+
+            for i = 1:numSteps
+                qMatrix(i,:) = (1 - sb(i)) * q1 + sb(i) * q2; 
+            end
+
+            for i = 1:numSteps
+                robot.checkPause(eStop);
+
+                robot.env.pr2LeftArm.model.base = robot.env.pr2Base.model.base.T * transl(-0.1, 0.18, 0.2+qMatrix(i,1));
+                robot.env.pr2RightArm.model.base = robot.env.pr2Base.model.base.T * transl(-0.1, -0.18, 0.2+qMatrix(i,1));
+
+                robot.env.pr2Base.model.animate(qMatrix(i,:));
+
+                qLeft = robot.env.pr2LeftArm.model.getpos();
+                qRight = robot.env.pr2RightArm.model.getpos();
+
+                leftEndEffectorTr = robot.env.pr2LeftArm.model.fkine(qLeft).T;
+                rightEndEffectorTr = robot.env.pr2RightArm.model.fkine(qRight).T;
+
+                robot.env.gripperl1.model.base = leftEndEffectorTr * offset;
+                robot.env.gripperr1.model.base = leftEndEffectorTr * offset;
+                robot.env.gripperl2.model.base = rightEndEffectorTr * offset;
+                robot.env.gripperr2.model.base = rightEndEffectorTr * offset;
+
+                qLeftGripper1 = robot.env.gripperl1.model.getpos();
+                qRightGripper1 = robot.env.gripperr1.model.getpos();
+                qLeftGripper2 = robot.env.gripperl2.model.getpos();
+                qRightGripper2 = robot.env.gripperr2.model.getpos();
+
+                robot.env.pr2LeftArm.model.animate(qLeft);
+                robot.env.pr2RightArm.model.animate(qRight);
+                robot.env.gripperl1.model.animate(qLeftGripper1);
+                robot.env.gripperr1.model.animate(qRightGripper1);
+                robot.env.gripperl2.model.animate(qLeftGripper2);
+                robot.env.gripperr2.model.animate(qRightGripper2);
+
+                drawnow();
+            end
+        end
+
+
         function animatePR2ArmsAndGrippers(robot, rightStartPos, rightEndPos, leftStartPos, leftEndPos, numSteps, eStop)
             global PR2GripperLeftState PR2GripperRightState;
             
             offset = troty(-pi/2) * transl(0.05, 0, 0);
             
-            q1 = robot.env.pr2Right.model.ikcon(rightStartPos);
-            q2 = robot.env.pr2Right.model.ikcon(rightEndPos);
+            q1 = robot.env.pr2RightArm.model.ikcon(rightStartPos);
+            q2 = robot.env.pr2RightArm.model.ikcon(rightEndPos);
             
-            q3 = robot.env.pr2Left.model.ikcon(leftStartPos);
-            q4 = robot.env.pr2Left.model.ikcon(leftEndPos);
+            q3 = robot.env.pr2LeftArm.model.ikcon(leftStartPos);
+            q4 = robot.env.pr2LeftArm.model.ikcon(leftEndPos);
             
             % LSPB trajectory for smooth transition
             sr = lspb(0, 1, numSteps); % Right arm blend
@@ -39,11 +88,11 @@ classdef robotControl
             for i = 1:numSteps
                 robot.checkPause(eStop); % Check for pause signal
                 
-                robot.env.pr2Right.model.animate(qPrer(i, :));
-                robot.env.pr2Left.model.animate(qPrel(i, :));
+                robot.env.pr2RightArm.model.animate(qPrer(i, :));
+                robot.env.pr2LeftArm.model.animate(qPrel(i, :));
                 
-                T_leftEndEffector = robot.env.pr2Left.model.fkine(qPrel(i, :)).T;
-                T_rightEndEffector = robot.env.pr2Right.model.fkine(qPrer(i, :)).T;
+                T_leftEndEffector = robot.env.pr2LeftArm.model.fkine(qPrel(i, :)).T;
+                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T;
                 
                 robot.env.gripperl1.model.base = T_leftEndEffector  * offset;
                 robot.env.gripperr1.model.base = T_leftEndEffector * offset;
