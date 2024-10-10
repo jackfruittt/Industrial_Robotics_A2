@@ -27,18 +27,18 @@ classdef EnvironmentLoader
             compEnv = 1;
             if compEnv
                 % Make pr2Prismatic base + Arms
-                obj.pr2Base = PR2Base();
-                obj.pr2LeftArm = PR2LeftArm(obj.pr2Base.model.base.T);
-                obj.pr2RightArm = PR2RightArm(obj.pr2Base.model.base.T);
+                obj.pr2Base = PR2.PR2Base();
+                obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
+                obj.pr2RightArm = PR2.PR2RightArm(obj.pr2Base.model.base.T);
                 %obj.pr2Left = PR2Left();
                 %obj.pr2Right = PR2Right();
 
                 % Left arm is 1, right arm is 2, l and r correspond to
                 % fingers of the gripper
-                obj.gripperl1 = PR2LeftGripper();
-                obj.gripperr1 = PR2RightGripper();
-                obj.gripperl2 = PR2LeftGripper();
-                obj.gripperr2 = PR2RightGripper();
+                obj.gripperl1 = PR2.PR2LeftGripper();
+                obj.gripperr1 = PR2.PR2RightGripper();
+                obj.gripperl2 = PR2.PR2LeftGripper();
+                obj.gripperr2 = PR2.PR2RightGripper();
                 % light('Position', [1 1 1], 'Style', 'infinite');
                 % lighting gouraud;  
                 % material shiny;   
@@ -51,8 +51,8 @@ classdef EnvironmentLoader
                 %obj.pr2Left.model.animate(qz);
                 %obj.pr2Right.model.animate(qz);
             else
-                obj.pr2Left = PR2Left();
-                obj.pr2Right = PR2Right();
+                obj.pr2Left = PR2.PR2Left();
+                obj.pr2Right = PR2.PR2Right();
                 % light('Position', [1 1 1], 'Style', 'infinite');
                 % lighting gouraud;  
                 % material shiny;   
