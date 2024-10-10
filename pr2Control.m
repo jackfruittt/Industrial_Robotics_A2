@@ -12,6 +12,8 @@ classdef pr2Control
         
         % edit pr2models
         function animatePR2Base(robot, baseStartPos, baseEndPos, numSteps, eStop)
+            offset = troty(-pi/2) * transl(0.05, 0, 0);
+
             q1 = robot.env.pr2Base.model.ikcon(baseStartPos);
             q2 = robot.env.pr2Base.model.ikcon(baseEndPos);
 
@@ -25,7 +27,35 @@ classdef pr2Control
 
             for i = 1:numSteps
                 robot.checkPause(eStop);
+
+                robot.env.pr2LeftArm.model.base = robot.env.pr2Base.model.base.T * transl(-0.1, 0.18, 0.2+qMatrix(i,1));
+                robot.env.pr2RightArm.model.base = robot.env.pr2Base.model.base.T * transl(-0.1, -0.18, 0.2+qMatrix(i,1));
+
                 robot.env.pr2Base.model.animate(qMatrix(i,:));
+
+                qLeft = robot.env.pr2LeftArm.model.getpos();
+                qRight = robot.env.pr2RightArm.model.getpos();
+
+                leftEndEffectorTr = robot.env.pr2LeftArm.model.fkine(qLeft).T;
+                rightEndEffectorTr = robot.env.pr2RightArm.model.fkine(qRight).T;
+
+                robot.env.gripperl1.model.bade = leftEndEffectorTr * offset;
+                robot.env.gripperr1.model.bade = leftEndEffectorTr * offset;
+                robot.env.gripperl2.model.bade = rightEndEffectorTr * offset;
+                robot.env.gripperr2.model.bade = rightEndEffectorTr * offset;
+
+                qLeftGripper1 = robot.env.gripperl1.model.getpos();
+                qRightGripper1 = robot.env.gripperr1.model.getpos();
+                qLeftGripper2 = robot.env.gripperl2.model.getpos();
+                qRightGripper2 = robot.env.gripperr2.model.getpos();
+
+                robot.env.pr2LeftArm.model.animate(qLeft);
+                robot.env.pr2RightArm.model.animate(qRight);
+                robot.env.gripperl1.model.animate(qLeftGripper1);
+                robot.env.gripperr1.model.animate(qRightGripper1);
+                robot.env.gripperl2.model.animate(qLeftGripper2);
+                robot.env.gripperr2.model.animate(qRightGripper2);
+
                 drawnow();
             end
         end

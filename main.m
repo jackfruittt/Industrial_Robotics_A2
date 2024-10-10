@@ -53,13 +53,13 @@ function animatePR2ArmsAndGrippers(env, homePosr, Tbr, homePosl, Tbl, numSteps)
 end
 
 numSteps = 100; 
+% Animate arm + grippers
 homePosr = transl(0.821, -0.440, 1);
 Tbr = transl(0.594,0.423, 0.647);
 homePosl = transl(0.821, 0, 1);
 Tbl = transl(0.594,-0.863, 0.647);
 
 animatePR2ArmsAndGrippers(env, homePosr, Tbr, homePosl, Tbl, numSteps);
-
 
 function animatePR2Base(env, baseStartPos, baseEndPos, numSteps)
     offset = troty(-pi/2) * transl(0.05, 0, 0);
@@ -80,21 +80,32 @@ function animatePR2Base(env, baseStartPos, baseEndPos, numSteps)
         % Shifts the arm base up or down relative to the base movement
         env.pr2LeftArm.model.base = env.pr2Base.model.base.T * transl(-0.1, 0.18, 0.2+qMatrix(i,1));
         env.pr2RightArm.model.base = env.pr2Base.model.base.T * transl(-0.1, -0.18, 0.2+qMatrix(i,1));
-        
+
         % Animate the base with the qmatrix
         env.pr2Base.model.animate(qMatrix(i,:));
         qLeft = env.pr2LeftArm.model.getpos();
-
-        % Include Gripper movements with base movements
-        qLeftGripper1 = env.gripperl1.model.base
-        qRightGripper1 = env.gripperr1
-
-
         qRight = env.pr2RightArm.model.getpos();
-        
 
+        % Include Gripper movements with end effector base movements
+        leftEndEffectorTr = env.pr2LeftArm.model.fkine(qLeft).T;
+        rightEndEffectorTr = env.pr2RightArm.model.fkine(qRight).T;
+
+        env.gripperl1.model.base = leftEndEffectorTr * offset;
+        env.gripperr1.model.base = leftEndEffectorTr * offset;
+        env.gripperl2.model.base = rightEndEffectorTr * offset;
+        env.gripperr2.model.base = rightEndEffectorTr * offset;
+
+        qLeftGripper1 = env.gripperl1.model.getpos();
+        qRightGripper1 = env.gripperr1.model.getpos();
+        qLeftGripper2 = env.gripperl2.model.getpos();
+        qRightGripper2 = env.gripperr2.model.getpos();
+        
         env.pr2LeftArm.model.animate(qLeft);
         env.pr2RightArm.model.animate(qRight);
+        env.gripperl1.model.animate(qLeftGripper1);
+        env.gripperr1.model.animate(qRightGripper1);
+        env.gripperl2.model.animate(qLeftGripper2);
+        env.gripperr2.model.animate(qRightGripper2);
         
         drawnow();
     end
