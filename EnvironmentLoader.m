@@ -7,13 +7,18 @@
 classdef EnvironmentLoader
     
     properties
-        pr2Right
-        pr2Left
+
         gripperl1
         gripperr1
         gripperl2
         gripperr2
         gripperrk
+        
+        pr2Right
+        pr2Left
+
+        tm5900
+
     end
     
     methods
@@ -23,41 +28,43 @@ classdef EnvironmentLoader
             obj.loadCustomObjects();
             compEnv = 1;
             if compEnv
-                obj.pr2Left = PR2Left();
-                obj.pr2Right = PR2Right();
-                obj.gripperl1 = PR2LeftGripper();
-                obj.gripperr1 = PR2RightGripper();
-                obj.gripperl2 = PR2LeftGripper();
-                obj.gripperr2 = PR2RightGripper();
-                light('Position', [1 1 1], 'Style', 'infinite');
+                obj.pr2Left = PR2.PR2Left();
+                obj.pr2Right = PR2.PR2Right();
+                obj.gripperl1 = PR2.PR2LeftGripper();
+                obj.gripperr1 = PR2.PR2RightGripper();
+                obj.gripperl2 = PR2.PR2LeftGripper();
+                obj.gripperr2 = PR2.PR2RightGripper();
+                obj.tm5900 = TM5900.TM5900();
+                %light('Position', [1 1 1], 'Style', 'infinite');
                 lighting gouraud;  
-                material shiny;   
-                camlight('headlight');
-                camlight('left');
+                %material dull;   
+                %camlight('headlight');
+                %camlight('left');
                 
                 qz = [0 pi/2 0 0 0 0 0];
                 obj.pr2Left.model.animate(qz);
                 obj.pr2Right.model.animate(qz);
             else
-                obj.pr2Left = PR2Left();
-                obj.pr2Right = PR2Right();
-                obj.gripperl1 = PR2LeftGripper();
-                obj.gripperr1 = PR2RightGripper();
-                obj.gripperl2 = PR2LeftGripper();
-                obj.gripperr2 = PR2RightGripper();
-                light('Position', [1 1 1], 'Style', 'infinite');
+                obj.pr2Left = PR2.PR2Left();
+                obj.pr2Right = PR2.PR2Right();
+                obj.gripperl1 = PR2.PR2LeftGripper();
+                obj.gripperr1 = PR2.PR2RightGripper();
+                obj.gripperl2 = PR2.PR2LeftGripper();
+                obj.gripperr2 = PR2.PR2RightGripper();
+                obj.tm5900 = TM5900.TM5900();
                 lighting gouraud;  
-                material shiny;   
-                camlight('headlight');
-                camlight('left');
                 
                 qz = [0 pi/2 0 0 0 0 0];
+                q = [0 0 0 0 0 0];
                 tr = obj.pr2Right.model.fkine(qz);
                 tr1 = obj.pr2Left.model.fkine(qz);
                 obj.pr2Left.model.teach(tr1);
                 obj.pr2Right.model.teach(tr);
+                obj.tm5900.model.teach();
                 obj.pr2Left.model.animate(qz);
                 obj.pr2Right.model.animate(qz);
+                obj.tm5900.model.animate(q);
+                
             end
         end
 
@@ -73,13 +80,13 @@ classdef EnvironmentLoader
             %     ,'CData', imread('images/floor_wood.jpg') ...
             %     ,'FaceColor', 'texturemap');
             kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0, 0, -0.38], 1, kitchenRotations)
+            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v11.1.ply',[0.80, 0, -1.1], 1, kitchenRotations)
 
-            boardRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/cutting_board.ply',[0.8, 0, 0.40], 1, boardRotations)
+            %boardRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            %obj.CustomPlaceObject('plyFiles/Scenery/cutting_board.ply',[0.8, 0, 0.40], 1, boardRotations)
 
-            bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/banana.ply',[0.8, 0, 0.45], 1, bananaRotations)
+            %bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            %obj.CustomPlaceObject('plyFiles/Scenery/banana.ply',[0.8, 0, 0.45], 1, bananaRotations)
         end
         
         %Custom PlaceObject function that plots ply files based off the RTB PlaceObject function.

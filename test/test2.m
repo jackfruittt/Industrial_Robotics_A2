@@ -62,8 +62,8 @@ clf;
 hold on;
 grid on;
 axis([-0.5 0.5 -0.5 0.5 -0.5 0.5]);
-leftGripper = PR2LeftGripper();
-rightGripper = PR2RightGripperWithKnife();
+leftGripper = PR2.PR2LeftGripper();
+rightGripper = PR2.PR2RightGripper();
 
 function GripperOpen(leftGripper, rightGripper, numSteps)
     % Define the joint l
@@ -86,9 +86,9 @@ end
 function GripperClose(leftGripper, rightGripper, numSteps)
     
     qLeftOpen = [deg2rad(18), deg2rad(-18)]; 
-    qLeftClose = [deg2rad(6), deg2rad(-6)];
+    qLeftClose = [deg2rad(10), deg2rad(-10)];
     qRightOpen = [deg2rad(-18), deg2rad(18)];  
-    qRightClose = [deg2rad(6), deg2rad(-6)];  
+    qRightClose = [deg2rad(-10), deg2rad(10)];  
 
     qMatrixLeft = jtraj(qLeftOpen, qLeftClose, numSteps);
     qMatrixRight = jtraj(qRightOpen, qRightClose, numSteps);
@@ -100,6 +100,14 @@ function GripperClose(leftGripper, rightGripper, numSteps)
     end
 end
 
+GripperOpen(leftGripper, rightGripper, 50);
+pause(0.5);
+GripperClose(leftGripper, rightGripper, 50);
+pause(0.5);
+GripperOpen(leftGripper, rightGripper, 50);
+pause(0.5);
+GripperClose(leftGripper, rightGripper, 50);
+pause(0.5);
 GripperOpen(leftGripper, rightGripper, 50);
 pause(0.5);
 GripperClose(leftGripper, rightGripper, 50);
