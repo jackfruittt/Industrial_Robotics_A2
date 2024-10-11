@@ -7,7 +7,12 @@
 classdef EnvironmentLoader
     
     properties
-
+        % Make pr2Prismatic base + Arms
+        pr2Base
+        pr2LeftArm
+        pr2RightArm
+        %pr2Right
+        %pr2Left
         gripperl1
         gripperr1
         gripperl2
@@ -28,31 +33,38 @@ classdef EnvironmentLoader
             obj.loadCustomObjects();
             compEnv = 1;
             if compEnv
-                obj.pr2Left = PR2.PR2Left();
-                obj.pr2Right = PR2.PR2Right();
+                % Make pr2Prismatic base + Arms
+                obj.pr2Base = PR2.PR2Base();
+                obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
+                obj.pr2RightArm = PR2.PR2RightArm(obj.pr2Base.model.base.T);
+                %obj.pr2Left = PR2Left();
+                %obj.pr2Right = PR2Right();
+
+                % Left arm is 1, right arm is 2, l and r correspond to
+                % fingers of the gripper
                 obj.gripperl1 = PR2.PR2LeftGripper();
                 obj.gripperr1 = PR2.PR2RightGripper();
                 obj.gripperl2 = PR2.PR2LeftGripper();
                 obj.gripperr2 = PR2.PR2RightGripper();
-                obj.tm5900 = TM5900.TM5900();
-                %light('Position', [1 1 1], 'Style', 'infinite');
-                lighting gouraud;  
-                %material dull;   
-                %camlight('headlight');
-                %camlight('left');
+                % light('Position', [1 1 1], 'Style', 'infinite');
+                % lighting gouraud;  
+                % material shiny;   
+                % camlight('headlight');
+                % camlight('left');
                 
-                qz = [0 pi/2 0 0 0 0 0];
-                obj.pr2Left.model.animate(qz);
-                obj.pr2Right.model.animate(qz);
+                qz = [0 0 0 0 0 0 0];
+                obj.pr2LeftArm.model.animate(qz);
+                obj.pr2RightArm.model.animate(qz);
+                %obj.pr2Left.model.animate(qz);
+                %obj.pr2Right.model.animate(qz);
             else
                 obj.pr2Left = PR2.PR2Left();
                 obj.pr2Right = PR2.PR2Right();
-                obj.gripperl1 = PR2.PR2LeftGripper();
-                obj.gripperr1 = PR2.PR2RightGripper();
-                obj.gripperl2 = PR2.PR2LeftGripper();
-                obj.gripperr2 = PR2.PR2RightGripper();
-                obj.tm5900 = TM5900.TM5900();
-                lighting gouraud;  
+                % light('Position', [1 1 1], 'Style', 'infinite');
+                % lighting gouraud;  
+                % material shiny;   
+                % camlight('headlight');
+                % camlight('left');
                 
                 qz = [0 pi/2 0 0 0 0 0];
                 q = [0 0 0 0 0 0];
@@ -80,10 +92,10 @@ classdef EnvironmentLoader
             %     ,'CData', imread('images/floor_wood.jpg') ...
             %     ,'FaceColor', 'texturemap');
             kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v11.1.ply',[0.80, 0, -1.1], 1, kitchenRotations)
+            obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0.2, 0, 0], 1, kitchenRotations)
 
-            %boardRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            %obj.CustomPlaceObject('plyFiles/Scenery/cutting_board.ply',[0.8, 0, 0.40], 1, boardRotations)
+            bananaRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, -0.8, 0.82], 1, bananaRotations)
 
             %bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             %obj.CustomPlaceObject('plyFiles/Scenery/banana.ply',[0.8, 0, 0.45], 1, bananaRotations)

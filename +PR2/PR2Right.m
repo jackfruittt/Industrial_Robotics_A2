@@ -9,8 +9,8 @@
 
 classdef PR2Right < RobotBaseClass
     
-    properties(Access = public)
-        plyFileNameStem = 'plyFiles/PR2Right/PR2';
+    properties(Access = public)              
+        plyFileNameStem = 'plyFiles/PR2Right/PR2';  
     end
     
     methods
@@ -19,12 +19,12 @@ classdef PR2Right < RobotBaseClass
             self.CreateModel();
             
             if nargin < 1
-                baseTr = eye(4);
+                baseTr = eye(4);  
             end
-            heightAdjustment = transl(0, 0.22, -0.71);
-            rotationAdjustment = trotx(pi);
+            heightAdjustment = transl(0, 0.44, -1); 
+            rotationAdjustment = trotx(pi); 
 
-            self.model.base = baseTr * rotationAdjustment * heightAdjustment;
+            self.model.base = baseTr * rotationAdjustment * heightAdjustment; 
             self.PlotAndColourRobot();
         end
         
@@ -34,85 +34,21 @@ classdef PR2Right < RobotBaseClass
             link(1) = Link([0      0.0      0.1     -pi/2          0]);
             link(2) = Link([0      0.0      0        pi/2          0]);
             link(3) = Link([0      0.4      0       -pi/2          0]);
-            link(4) = Link([0      0.0      0        pi/2          0]);
-            link(5) = Link([0      0.321    0       -pi/2          0]);
-            link(6) = Link([0      0.0      0        pi/2          0]);
+            link(4) = Link([0      0.0      0        pi/2          0]); 
+            link(5) = Link([0      0.321    0       -pi/2          0]); 
+            link(6) = Link([0      0.0      0        pi/2          0]); 
             link(7) = Link([0      0.0      0        0             0]);
             
-            link(1).qlim = [deg2rad(-40) deg2rad(130)];
-            link(2).qlim = [deg2rad(30) deg2rad(140)]; %Willow Garage spcifies [-30 80], ROS specifies [60 170], [30 140] seems best for MATLAB and fits within 110-deg range
-            link(3).qlim = [deg2rad(-224) deg2rad(44)];
-            link(4).qlim = [deg2rad(0) deg2rad(133)];
-            link(5).qlim = [deg2rad(-180) deg2rad(180)];
-            link(6).qlim = [deg2rad(0) deg2rad(130)];
-            link(7).qlim = [deg2rad(-180) deg2rad(180)];
-            
-
-            self.model = SerialLink(link, 'name', self.name);
-        end
-    end
-end
-
-
-%{
-classdef PR2Right < RobotBaseClass
-    
-    properties(Access = public)
-        plyFileNameStem = 'plyFiles/PR2Right/PR2';
-        ellipsoids % Cell array to store ellipsoid data for each link
-    end
-    
-    methods
-        function self = PR2Right(baseTr)
-            self.CreateModel();
-            
-            if nargin < 1
-                baseTr = eye(4);
-            end
-            heightAdjustment = transl(0, 0.44, -0.71);
-            rotationAdjustment = trotx(pi);
-            
-            self.model.base = baseTr * rotationAdjustment * heightAdjustment;
-            %self.PlotAndColourRobot();
-            %self.CreateEllipsoids(); % Create ellipsoids after plotting
-        end
-        
-        function CreateModel(self)
-            % Define the DH parameters for the PR2 robot links using Link objects
-            link(1) = Link([0      0.0      0.1     -pi/2          0]);
-            link(2) = Link([0      0.0      0        pi/2          0]);
-            link(3) = Link([0      0.4      0       -pi/2          0]);
-            link(4) = Link([0      0.0      0        pi/2          0]);
-            link(5) = Link([0      0.321    0       -pi/2          0]);
-            link(6) = Link([0      0.0      0        pi/2          0]);
-            link(7) = Link([0      0.0      0        0             0]);
-            
-            link(1).qlim = [deg2rad(-40) deg2rad(130)];
+            link(1).qlim = [deg2rad(-130) deg2rad(40)];
             link(2).qlim = [deg2rad(40) deg2rad(210)];
             link(3).qlim = [deg2rad(-224) deg2rad(44)];
             link(4).qlim = [deg2rad(0) deg2rad(133)];
             link(5).qlim = [deg2rad(-180) deg2rad(180)];
             link(6).qlim = [deg2rad(0) deg2rad(130)];
             link(7).qlim = [deg2rad(-180) deg2rad(180)];
-            self.model = SerialLink(link, 'name', self.name);
-            hold on;
-            self.model.teach();
-            
 
-            centerPoint = [0,0,0];
-            radii = [0.1,0.1,0.1];
-            
-            [X,Y,Z] = ellipsoid( centerPoint(1), centerPoint(2), centerPoint(3), radii(1), radii(2), radii(3) );
-            for i = 1:8
-                self.model.points{i} = [X(:),Y(:),Z(:)];
-                warning off
-                self.model.faces{i} = delaunay(self.model.points{i});    
-                warning on;
-                self.model.plot([0 pi/2 0 0 0 0 0]);
-                axis equal
-            end
-            
+            self.model = SerialLink(link, 'name', self.name);
         end
     end
 end
-%}
+
