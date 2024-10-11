@@ -61,6 +61,7 @@ robot.animatePR2ArmsAndGrippers(homePosr, Tbr, homePosl, Tbl, numSteps, eStop);
 robot.animatePR2Base(startTr, endTr, numSteps, eStop);
 robot.animatePR2ArmsAndGrippers(Tb3r, Tb4r, Tb3l, Tb4l, numSteps, eStop);
 robot.animatePR2Base(startTr1, endTr1, numSteps, eStop);
+robot.animateRightPR2ArmsAndGrippersWithKnife(Tb4r, Tbr, numSteps, eStop);
 
 
 function deletePlyObject(objectHandle)

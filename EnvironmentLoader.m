@@ -11,6 +11,7 @@ classdef EnvironmentLoader
         pr2Base
         pr2LeftArm
         pr2RightArm
+        pr2KnifeArm
         %pr2Right
         %pr2Left
         gripperl1
@@ -37,6 +38,7 @@ classdef EnvironmentLoader
                 obj.pr2Base = PR2.PR2Base();
                 obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
                 obj.pr2RightArm = PR2.PR2RightArm(obj.pr2Base.model.base.T);
+                obj.pr2KnifeArm = Knife.robotKnife();
                 %obj.pr2Left = PR2Left();
                 %obj.pr2Right = PR2Right();
 
@@ -58,8 +60,9 @@ classdef EnvironmentLoader
                 %obj.pr2Left.model.animate(qz);
                 %obj.pr2Right.model.animate(qz);
             else
-                obj.pr2Left = PR2.PR2Left();
-                obj.pr2Right = PR2.PR2Right();
+                obj.pr2Base = PR2.PR2Base();
+                obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
+                obj.pr2RightArm = PR2.PR2RightArm(obj.pr2Base.model.base.T);
                 % light('Position', [1 1 1], 'Style', 'infinite');
                 % lighting gouraud;  
                 % material shiny;   
