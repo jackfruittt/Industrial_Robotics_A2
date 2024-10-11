@@ -7,7 +7,7 @@ classdef robotKnife < RobotBaseClass
     end
     
     methods
-        %% Constructor
+        
         function self = robotKnife(baseTr)
             if nargin < 1
                 baseTr = transl(1, 2, 0);
@@ -19,12 +19,10 @@ classdef robotKnife < RobotBaseClass
             drawnow
         end
         
-        %% CreateModel
         function CreateModel(self)
             % Create a single link for the knife
             link(1) = Link('alpha', 0, 'a', 0, 'd', 0.01, 'offset', 0);
             
-            % Create the SerialLink model and assign it a name
             self.model = SerialLink(link, 'name', self.name);
         end
         
