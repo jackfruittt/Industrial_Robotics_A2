@@ -10,7 +10,7 @@ classdef PR2RightArm < RobotBaseClass
                 baseTr = eye(4);
             end
             
-            heightAdjustment = transl(-0.1, -0.18, 0.2);
+            heightAdjustment = transl(-0.1, 0.18, 0.2);
 
             self.model.base = baseTr * heightAdjustment; 
             self.PlotAndColourRobot();
@@ -31,17 +31,24 @@ classdef PR2RightArm < RobotBaseClass
             %6 Wrist Roll      0      0     0.0 0.0    -180 180
 
 
-             links = [
-                        Revolute('d', 0.0,   'a', 0.1, 'alpha', -pi/2, 'qlim', [deg2rad(-130) deg2rad(40)])
-                        Revolute('d', 0.0,   'a', 0.0, 'alpha', pi/2,  'qlim', [deg2rad(30) deg2rad(140)], 'offset', pi/2)
-                        Revolute('d', 0.4,   'a', 0.0, 'alpha', -pi/2, 'qlim', [deg2rad(-224) deg2rad(44)])
-                        Revolute('d', 0.0,   'a', 0.0, 'alpha', pi/2,  'qlim', [deg2rad(0) deg2rad(133)])
-                        Revolute('d', 0.321, 'a', 0.0, 'alpha', -pi/2, 'qlim', [deg2rad(-180) deg2rad(180)])
-                        Revolute('d', 0.0,   'a', 0.0, 'alpha', pi/2,  'qlim', [deg2rad(0) deg2rad(130)])
-                        Revolute('d', 0.0,   'a', 0.0, 'alpha', 0,     'qlim', [deg2rad(-180) deg2rad(180)])
-                     ];
+            %Link(         [θ      d        a        αlpha      sigma])
+            link(1) = Link([0      0.0      0.1     -pi/2          0]);
+            link(2) = Link([0      0.0      0        pi/2          0]);
+            link(3) = Link([0      0.4      0       -pi/2          0]);
+            link(4) = Link([0      0.0      0        pi/2          0]); 
+            link(5) = Link([0      0.321    0       -pi/2          0]); 
+            link(6) = Link([0      0.0      0        pi/2          0]); 
+            link(7) = Link([0      0.0      0        0             0]);
+            
+            link(1).qlim = [deg2rad(-130) deg2rad(40)];
+            link(2).qlim = [deg2rad(40) deg2rad(210)];
+            link(3).qlim = [deg2rad(-224) deg2rad(44)];
+            link(4).qlim = [deg2rad(0) deg2rad(133)];
+            link(5).qlim = [deg2rad(-180) deg2rad(180)];
+            link(6).qlim = [deg2rad(0) deg2rad(130)];
+            link(7).qlim = [deg2rad(-180) deg2rad(180)];
 
-            self.model =  SerialLink(links, 'name', self.name);
+            self.model =  SerialLink(link, 'name', self.name);
         end
     end
 end

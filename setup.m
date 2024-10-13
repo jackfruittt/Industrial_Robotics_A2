@@ -25,3 +25,5 @@ function setup()
     % Confirm the setup is complete
     disp('Project setup complete. Paths have been added and toolbox initialized.');
 end
+
+
