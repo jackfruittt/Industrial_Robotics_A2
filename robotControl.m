@@ -11,6 +11,70 @@ classdef robotControl
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PR2 FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        function movePR2ArmsRMRC(robot, leftStartTr, leftEndTr, rightStartTr, rightEndTr, steps, deltaTime, lambda, epsilon, eStop)
+            
+            % Use ikcon to get initial joint angles from given pose
+            qStartLeft = robot.env.pr2LeftArm.model.ikcon(leftStartTr);
+            qStartRight = robot.env.pr2RightArm.model.ikcon(rightStartTr);
+            
+            qMatrixLeft = zeros(steps, 7);
+            qMatrixRight = zeros(steps, 7);
+
+            % Set first joint angles with the calculated starting ones
+            qMatrixLeft(1,:) = qStartLeft;
+            qMatrixRight(1,:) = qStartRight;
+
+            % Get cartesian traj from start to end given n steps
+            leftArmCTraj = ctraj(leftStartTr, leftEndTr, steps);
+            rightArmCTraj = ctraj(rightStartTr, rightEndTr, steps);
+
+            % RMRC loop 
+            for i = 1:steps-1
+                % Get current joint angles
+                qLeft = qMatrixLeft(i, :);
+                qRight = qMatrixRight(i, :);
+
+                % Get current pose using fkine
+                tLeft = robot.env.pr2LeftArm.model.fkine(qLeft).T;
+                tRight = robot.env.pr2RightArm.model.fkine(qRight).T;
+
+                % Compute cartesian velocity
+                vLeft = tr2delta(tLeft, leftArmCTraj(:,:,i+1)) / deltaTime;
+                vRight = tr2delta(tRight, rightArmCTraj(:,:,i+1)) / deltaTime;
+
+                % Compute jacobian at current joint configuration
+                jLeft = robot.env.pr2LeftArm.model.jacob0(qLeft);
+                jRight = robot.env.pr2RightArm.model.jacob0(qRight);
+
+                % Handle singularities through Damped Least Squares (DLS) for left and right
+                if abs(det(jLeft * jLeft')) < epsilon
+                    qLeftDot = (jLeft' / (jLeft * jLeft' + lambda^2 * eye(6))) * vLeft;
+                else
+                    qLeftDot = jLeft \ vLeft;
+                end
+
+                if abs(det(jRight * jRight')) < epsilon
+                    qRightDot = (jRight' / (jRight * jRight' + lambda^2 * eye(6))) * vRight;
+                else
+                    qRightDot = jRight \ vRight;
+                end
+
+                % Euler integration to update joint angles for both arms
+                qMatrixLeft(i+1, :) = qLeft + qLeftDot' * deltaTime;
+                qMatrixRight(i+1, :) = qRight + qRightDot' * deltaTime;
+            end
+
+            % Animate the robot movement
+            for i = 1:steps
+                robot.checkPause(eStop);
+                robot.env.pr2LeftArm.model.animate(qMatrixLeft(i,:));
+                robot.env.pr2RightArm.model.animate(qMatrixRight(i,:));
+                drawnow();
+            end
+
+        end
+
         function animatePR2Base(robot, baseStartPos, baseEndPos, numSteps, eStop)
             offset = troty(-pi/2) * transl(0.05, 0, 0);
 
