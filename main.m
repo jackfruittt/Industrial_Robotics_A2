@@ -7,7 +7,7 @@ axis([-4.5 4.5 -3.5 3.5 0 3.5]);
 
 view(90, 10);  
 % Load environment
-eStop = serialport('COM3', 'BaudRate', 9600);  
+eStop = serial('COM3', 'BaudRate', 9600);  
 env = EnvironmentLoader();
 laser = pr2Laser();
 gripperLeftState = 'closed';
@@ -55,11 +55,11 @@ endTr1 = robot.env.pr2Base.model.fkine(qEnd1);
 
 % Call functions from robotControl to move pr2 
 % Move arm -> base up -> move arm -> base down
-robot.animatePR2ArmsAndGrippers(homePosr, Tbr, homePosl, Tbl, numSteps, eStop);
+robot.animatePR2ArmsAndGrippers(homePosr, Tbl, homePosl, Tbr, numSteps, eStop);
 robot.animatePR2Base(startTr, endTr, numSteps, eStop);
-robot.animatePR2ArmsAndGrippers(Tb3r, Tb4r, Tb3l, Tb4l, numSteps, eStop);
+robot.animatePR2ArmsAndGrippers(Tbl, Tb4r, Tbr, Tb4l, numSteps, eStop);
 robot.animatePR2Base(startTr1, endTr1, numSteps, eStop);
-robot.animateRightPR2ArmsAndGrippersWithKnife(Tb4r, Tbr, numSteps, eStop);
+robot.animateRightPR2ArmsAndGrippersWithKnife(Tb4r, Tbl, numSteps, eStop);
 
 
 function deletePlyObject(objectHandle)

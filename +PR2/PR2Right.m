@@ -21,7 +21,7 @@ classdef PR2Right < RobotBaseClass
             if nargin < 1
                 baseTr = eye(4);  
             end
-            heightAdjustment = transl(0, 0.44, -1); 
+            heightAdjustment = transl(0, 0.22, -0.71); 
             rotationAdjustment = trotx(pi); 
 
             self.model.base = baseTr * rotationAdjustment * heightAdjustment; 
