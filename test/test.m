@@ -1,5 +1,6 @@
 clf;
 clc;
+%{
 grid on;
 hold on;
 axis([-4 4 -2 2 0 2]);
@@ -48,6 +49,39 @@ for t = 1:50  % Adjust the number of steps as needed
     
     pause(0.1);  % Adjust pause to control the speed of the animation
 end
+cowHerd =robotKnife(1);
+ur5Robot = UR5;
+cowHerd.cowModel{1}.base = ur5Robot.model.fkine([0,0,0,0,0,0]);
+cowHerd.cowModel{1}.animate(0)
+cowHerd.cowModel{1}.base = ur5Robot.model.fkine([0,0,0,0,0,0]);
+cowHerd.cowModel{1}.animate(0)
+for i = 1:50
+    ur5Robot.model.animate(qMatrix(i,:));
+    cowHerd.cowModel{1}.base = ur5Robot.model.fkine(qMatrix(i,:));
+    cowHerd.cowModel{1}.animate(0);
+    drawnow()
+%}
 
+
+% Load the knife and place it initially
+
+% Create an instance of robotKnife
+% Create an instance of robotKnife
+knife = Knife.robotKnife();
+
+% Define a trajectory for the UR5 robot
+qMatrix = jtraj([0,0,0,0,0,0], [pi/4, -pi/4, pi/4, pi/4, pi/4, pi/4], 50);
+
+% Attach the knife to the end effector of the UR5 robot
+ur5Robot = UR5();
+for i = 1:50
+    % Animate UR5 robot
+    ur5Robot.model.animate(qMatrix(i, :));
     
+    % Attach knife to UR5 end effector
+    knife.attachToEndEffector(ur5Robot.model.fkine(qMatrix(i, :)).T);
+    
+    % Render the scene
+    drawnow();
+end
 

@@ -11,12 +11,20 @@ classdef EnvironmentLoader
         pr2Base
         pr2LeftArm
         pr2RightArm
+        pr2KnifeArm
         %pr2Right
         %pr2Left
         gripperl1
         gripperr1
         gripperl2
         gripperr2
+        gripperrk
+        
+        pr2Right
+        pr2Left
+
+        tm5900
+
     end
     
     methods
@@ -30,6 +38,7 @@ classdef EnvironmentLoader
                 obj.pr2Base = PR2.PR2Base();
                 obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
                 obj.pr2RightArm = PR2.PR2RightArm(obj.pr2Base.model.base.T);
+                obj.pr2KnifeArm = Knife.robotKnife();
                 %obj.pr2Left = PR2Left();
                 %obj.pr2Right = PR2Right();
 
@@ -51,8 +60,9 @@ classdef EnvironmentLoader
                 %obj.pr2Left.model.animate(qz);
                 %obj.pr2Right.model.animate(qz);
             else
-                obj.pr2Left = PR2.PR2Left();
-                obj.pr2Right = PR2.PR2Right();
+                obj.pr2Base = PR2.PR2Base();
+                obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
+                obj.pr2RightArm = PR2.PR2RightArm(obj.pr2Base.model.base.T);
                 % light('Position', [1 1 1], 'Style', 'infinite');
                 % lighting gouraud;  
                 % material shiny;   
@@ -60,12 +70,16 @@ classdef EnvironmentLoader
                 % camlight('left');
                 
                 qz = [0 pi/2 0 0 0 0 0];
+                q = [0 0 0 0 0 0];
                 tr = obj.pr2Right.model.fkine(qz);
                 tr1 = obj.pr2Left.model.fkine(qz);
                 obj.pr2Left.model.teach(tr1);
                 obj.pr2Right.model.teach(tr);
+                obj.tm5900.model.teach();
                 obj.pr2Left.model.animate(qz);
                 obj.pr2Right.model.animate(qz);
+                obj.tm5900.model.animate(q);
+                
             end
         end
 
@@ -86,8 +100,8 @@ classdef EnvironmentLoader
             bananaRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, -0.8, 0.82], 1, bananaRotations)
 
-            hazardLightRotations = { {0, 'XY'}, {0, 'XZ'}, {-90, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/hazard_light.ply',[1.0, -2.15, 1.8], 0.1, hazardLightRotations);
+            %bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            %obj.CustomPlaceObject('plyFiles/Scenery/banana.ply',[0.8, 0, 0.45], 1, bananaRotations)
         end
         
         %Custom PlaceObject function that plots ply files based off the RTB PlaceObject function.

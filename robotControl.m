@@ -28,8 +28,8 @@ classdef robotControl
             for i = 1:numSteps
                 robot.checkPause(eStop);
 
-                robot.env.pr2LeftArm.model.base = robot.env.pr2Base.model.base.T * transl(-0.1, 0.18, 0.2+qMatrix(i,1));
-                robot.env.pr2RightArm.model.base = robot.env.pr2Base.model.base.T * transl(-0.1, -0.18, 0.2+qMatrix(i,1));
+                robot.env.pr2LeftArm.model.base = robot.env.pr2Base.model.base.T * transl(-0.1, -0.18, 0.2+qMatrix(i,1));
+                robot.env.pr2RightArm.model.base = robot.env.pr2Base.model.base.T * transl(-0.1, 0.18, 0.2+qMatrix(i,1));
 
                 robot.env.pr2Base.model.animate(qMatrix(i,:));
 
@@ -122,8 +122,8 @@ classdef robotControl
             
             offset = troty(-pi/2) * transl(0.05, 0, 0);
             
-            q1 = robot.env.pr2Right.model.ikcon(rightStartPos);
-            q2 = robot.env.pr2Right.model.ikcon(rightEndPos);
+            q1 = robot.env.pr2RightArm.model.ikcon(rightStartPos);
+            q2 = robot.env.pr2RightArm.model.ikcon(rightEndPos);
             
             % LSPB trajectory for smooth transition
             sr = lspb(0, 1, numSteps); % Right arm blend
@@ -137,14 +137,48 @@ classdef robotControl
             for i = 1:numSteps
                 robot.checkPause(eStop); % Check for pause signal
                 
-                robot.env.pr2Right.model.animate(qPrer(i, :));
+                robot.env.pr2RightArm.model.animate(qPrer(i, :));
                 
-                T_rightEndEffector = robot.env.pr2Right.model.fkine(qPrer(i, :)).T;
+                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T;
                 
                 robot.env.gripperl2.model.base = T_rightEndEffector * offset;
                 robot.env.gripperr2.model.base = T_rightEndEffector * offset;
                 
                 robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
+                
+                drawnow(); % Update the figure
+            end
+        end
+
+        function animateRightPR2ArmsAndGrippersWithKnife(robot, rightStartPos, rightEndPos, numSteps, eStop)
+            global gripperRightState;
+            
+            gripperOffset = troty(-pi/2) * transl(0.05, 0, 0); 
+            
+            q1 = robot.env.pr2RightArm.model.ikcon(rightStartPos);
+            q2 = robot.env.pr2RightArm.model.ikcon(rightEndPos);
+            
+            % LSPB trajectory for smooth transition
+            sr = lspb(0, 1, numSteps); % Right arm blend
+            qPrer = nan(numSteps, 7);
+            
+            for i = 1:numSteps
+                qPrer(i, :) = (1 - sr(i)) * q1 + sr(i) * q2;
+            end
+        
+            % Plot the motion between poses and animate robot with grippers
+            for i = 1:numSteps
+                robot.checkPause(eStop); % Check for pause signal
+                
+                robot.env.pr2RightArm.model.animate(qPrer(i, :)); 
+                
+                tRightEndEffector = robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T;
+        
+                robot.env.gripperl2.model.base = tRightEndEffector * gripperOffset;
+                robot.env.gripperr2.model.base = tRightEndEffector * gripperOffset;
+                robot.env.pr2KnifeArm.attachToEndEffector(robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T);
+        
+                robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, gripperRightState);
                 
                 drawnow(); % Update the figure
             end
@@ -171,9 +205,9 @@ classdef robotControl
             for i = 1:numSteps
                 robot.checkPause(eStop);
                 
-                robot.env.pr2Right.model.animate(qMatrix(i, :));
+                robot.env.pr2RightArm.model.animate(qMatrix(i, :));
                 
-                T_rightEndEffector = robot.env.pr2Right.model.fkine(qMatrix(i, :)).T;
+                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrix(i, :)).T;
                 
                 robot.env.gripperl2.model.base = T_rightEndEffector * offset;
                 robot.env.gripperr2.model.base = T_rightEndEffector * offset;
@@ -190,8 +224,8 @@ classdef robotControl
             
             offset = troty(-pi/2) * transl(0.05, 0, 0);
             
-            q3 = robot.env.pr2Left.model.ikcon(leftStartPos);
-            q4 = robot.env.pr2Left.model.ikcon(leftEndPos);
+            q3 = robot.env.pr2LeftArm.model.ikcon(leftStartPos);
+            q4 = robot.env.pr2LeftArm.model.ikcon(leftEndPos);
             
             sl = lspb(0, 1, numSteps); % Left arm blend
             qPrel = nan(numSteps, 7);
@@ -204,9 +238,9 @@ classdef robotControl
             for i = 1:numSteps
                 robot.checkPause(eStop); % Check for pause signal
                 
-                robot.env.pr2Left.model.animate(qPrel(i, :));
+                robot.env.pr2LeftArm.model.animate(qPrel(i, :));
                 
-                T_leftEndEffector = robot.env.pr2Left.model.fkine(qPrel(i, :)).T;
+                T_leftEndEffector = robot.env.pr2LeftArm.model.fkine(qPrel(i, :)).T;
                 
                 robot.env.gripperl1.model.base = T_leftEndEffector  * offset;
                 robot.env.gripperr1.model.base = T_leftEndEffector * offset;
