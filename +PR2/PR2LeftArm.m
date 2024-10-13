@@ -37,8 +37,8 @@ classdef PR2LeftArm < RobotBaseClass
 
              links = [
                         Revolute('d', 0.0,   'a', 0.1, 'alpha', -pi/2, 'qlim', [deg2rad(-40) deg2rad(130)])
-                        Revolute('d', 0.0,   'a', 0.0, 'alpha', pi/2,  'qlim', [deg2rad(60) deg2rad(170)], 'offset', pi/2)
-                        Revolute('d', 0.4,   'a', 0.0, 'alpha', -pi/2, 'qlim', [deg2rad(-44) deg2rad(224)])
+                        Revolute('d', 0.0,   'a', 0.0, 'alpha', pi/2,  'qlim', [deg2rad(30) deg2rad(140)], 'offset', pi/2)
+                        Revolute('d', 0.4,   'a', 0.0, 'alpha', -pi/2, 'qlim', [deg2rad(-224) deg2rad(44)])
                         Revolute('d', 0.0,   'a', 0.0, 'alpha', pi/2,  'qlim', [deg2rad(0) deg2rad(133)])
                         Revolute('d', 0.321, 'a', 0.0, 'alpha', -pi/2, 'qlim', [deg2rad(-180) deg2rad(180)])
                         Revolute('d', 0.0,   'a', 0.0, 'alpha', pi/2,  'qlim', [deg2rad(0) deg2rad(130)])
