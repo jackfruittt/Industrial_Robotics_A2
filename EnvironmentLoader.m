@@ -71,15 +71,9 @@ classdef EnvironmentLoader
                 
                 qz = [0 pi/2 0 0 0 0 0];
                 q = [0 0 0 0 0 0];
-                tr = obj.pr2Right.model.fkine(qz);
-                tr1 = obj.pr2Left.model.fkine(qz);
-                obj.pr2Left.model.teach(tr1);
-                obj.pr2Right.model.teach(tr);
-                obj.tm5900.model.teach();
-                obj.pr2Left.model.animate(qz);
-                obj.pr2Right.model.animate(qz);
-                obj.tm5900.model.animate(q);
-                
+                obj.pr2LeftArm.model.teach();
+                obj.pr2RightArm.model.teach();
+                              
             end
         end
 
@@ -97,8 +91,11 @@ classdef EnvironmentLoader
             kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0.2, 0, 0], 1, kitchenRotations)
 
-            bananaRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, -0.8, 0.82], 1, bananaRotations)
+            bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0, 0.82], 1, bananaRotations)
+
+            boardRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/cutting_board.ply',[1.0, 0, 0.80], 1, boardRotations)
 
             %bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             %obj.CustomPlaceObject('plyFiles/Scenery/banana.ply',[0.8, 0, 0.45], 1, bananaRotations)

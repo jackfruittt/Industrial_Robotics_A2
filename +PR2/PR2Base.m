@@ -11,7 +11,7 @@ classdef PR2Base < RobotBaseClass
             end
 
             rotationAdjustment = trotx(pi);
-            heightAdjustment = transl(0,0,-1.025);
+            heightAdjustment = transl(0.35,0,-1.025);
 
             self.model.base = baseTr * rotationAdjustment * heightAdjustment; 
             self.PlotAndColourRobot();
