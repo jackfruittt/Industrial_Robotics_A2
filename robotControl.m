@@ -252,6 +252,152 @@ classdef robotControl
             end
         end
         
+        function animatePR2ArmsRMRC(robot, leftStartTr, leftEndTr, rightStartTr, rightEndTr, steps, deltaTime, lambda, epsilon, eStop)
+
+            global PR2GripperRightState;
+            
+            offset = troty(-pi/2) * transl(0.05, 0, 0);
+            
+            % Use ikcon to get initial joint angles from given pose
+            qStartLeft = robot.env.pr2LeftArm.model.ikcon(leftStartTr);
+            qStartRight = robot.env.pr2RightArm.model.ikcon(rightStartTr);
+            
+            qMatrixLeft = zeros(steps, 7);
+            qMatrixRight = zeros(steps, 7);
+
+            % Set first joint angles with the calculated starting ones
+            qMatrixLeft(1,:) = qStartLeft;
+            qMatrixRight(1,:) = qStartRight;
+
+            % Get cartesian traj from start to end given n steps
+            leftArmCTraj = ctraj(leftStartTr, leftEndTr, steps);
+            rightArmCTraj = ctraj(rightStartTr, rightEndTr, steps);
+
+            % RMRC loop 
+            for i = 1:steps-1
+                % Get current joint angles
+                qLeft = qMatrixLeft(i, :);
+                qRight = qMatrixRight(i, :);
+
+                % Get current pose using fkine
+                tLeft = robot.env.pr2LeftArm.model.fkine(qLeft).T;
+                tRight = robot.env.pr2RightArm.model.fkine(qRight).T;
+
+                % Compute cartesian velocity
+                vLeft = tr2delta(tLeft, leftArmCTraj(:,:,i+1)) / deltaTime;
+                vRight = tr2delta(tRight, rightArmCTraj(:,:,i+1)) / deltaTime;
+
+                % Compute jacobian at current joint configuration
+                jLeft = robot.env.pr2LeftArm.model.jacob0(qLeft);
+                jRight = robot.env.pr2RightArm.model.jacob0(qRight);
+
+                % Handle singularities through Damped Least Squares (DLS) for left and right
+                if abs(det(jLeft * jLeft')) < epsilon
+                    qLeftDot = (jLeft' / (jLeft * jLeft' + lambda^2 * eye(6))) * vLeft;
+                else
+                    qLeftDot = jLeft \ vLeft;
+                end
+
+                if abs(det(jRight * jRight')) < epsilon
+                    qRightDot = (jRight' / (jRight * jRight' + lambda^2 * eye(6))) * vRight;
+                else
+                    qRightDot = jRight \ vRight;
+                end
+
+                % Euler integration to update joint angles for both arms
+                qMatrixLeft(i+1, :) = qLeft + qLeftDot' * deltaTime;
+                qMatrixRight(i+1, :) = qRight + qRightDot' * deltaTime;
+            end
+
+            % Animate the robot movement
+            for i = 1:steps
+                robot.checkPause(eStop);
+                robot.env.pr2LeftArm.model.animate(qMatrixLeft(i,:));
+                robot.env.pr2RightArm.model.animate(qMatrixRight(i,:));
+                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T;
+                
+                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                
+                robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
+                drawnow();
+            end
+
+        end
+
+        function animatePR2RightArmRMRC(robot, rightStartTr, rightEndTr, steps, deltaTime, lambda, epsilon, eStop)
+
+            global PR2GripperRightState;
+            
+            offset = troty(-pi/2) * transl(0.05, 0, 0);
+            
+            % Use ikcon to get initial joint angles from given pose
+            qStartRight = robot.env.pr2RightArm.model.ikcon(rightStartTr);
+            
+            qMatrixRight = zeros(steps, 7);
+
+            % Set first joint angles with the calculated starting ones
+            qMatrixRight(1,:) = qStartRight;
+
+            % Get cartesian traj from start to end given n steps
+            rightArmCTraj = ctraj(rightStartTr, rightEndTr, steps);
+
+            % RMRC loop 
+            for i = 1:steps-1
+                % Get current joint angles
+                qRight = qMatrixRight(i, :);
+
+                % Get current pose using fkine
+                tRight = robot.env.pr2RightArm.model.fkine(qRight).T;
+
+                % Compute cartesian velocity
+                vRight = tr2delta(tRight, rightArmCTraj(:,:,i+1)) / deltaTime;
+
+                % Compute jacobian at current joint configuration
+                jRight = robot.env.pr2RightArm.model.jacob0(qRight);
+
+                % Handle singularities through Damped Least Squares (DLS) for left and right
+
+                if abs(det(jRight * jRight')) < epsilon
+                    qRightDot = (jRight' / (jRight * jRight' + lambda^2 * eye(6))) * vRight;
+                else
+                    qRightDot = jRight \ vRight;
+                end
+
+                % Euler integration to update joint angles for both arms
+                qMatrixRight(i+1, :) = qRight + qRightDot' * deltaTime;
+            end
+
+            % Animate the robot movement
+            for i = 1:steps
+                robot.checkPause(eStop);
+                robot.env.pr2RightArm.model.animate(qMatrixRight(i,:));
+                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T;
+                
+                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
+                drawnow();
+            end
+
+        end
+
+        function animatePR2SingleRightJoint(robot, jointToMove, targetAngleDeg, steps)
+        
+            currentConfig = robot.env.r2RightArm.model.getpos();  
+            
+            targetAngleRad = deg2rad(targetAngleDeg);
+        
+            angles = linspace(currentConfig(jointToMove), targetAngleRad, steps);
+        
+            qTarget = currentConfig;
+        
+            for i = 1:length(angles)
+                qTarget(jointToMove) = angles(i);  
+                robot.env.pr2RightArm.model.animate(qTarget);  
+                drawnow();  
+            end
+        end
         
         function animatePR2LeftArmsAndGrippers(robot, leftStartPos, leftEndPos, numSteps, eStop)
             global PR2GripperLeftState;
@@ -280,7 +426,7 @@ classdef robotControl
                 robot.env.gripperr1.model.base = T_leftEndEffector * offset;
                 
                 robot.animatePR2Grippers(robot.env.gripperl1, robot.env.gripperr1, PR2GripperLeftState);
-                
+                robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 drawnow(); % Update the figure
             end
         end
