@@ -1,4 +1,4 @@
-clc;
+
 clf;
 
 grid on;
@@ -17,6 +17,7 @@ obj.pr2LeftArm.model.teach();
 obj.pr2RightArm.model.teach();
 %}
 % Load environment
+fakeKnife = PlaceObject("plyFiles/Scenery/knife.ply", [0.89, -0.59, 0.86]);
 env = EnvironmentLoader();
 %obj.pr2LeftArm.model.teach();
 %obj.pr2RightArm.model.teach();
@@ -37,6 +38,9 @@ l = [0.721 0.180 0.825]
 
 r = [-0.100 -0.680 1.146]
 l = [-0.100  0.680 1.146]
+
+%% Knife Pos
+r ~= [0.557, -0.617, 0.863] 
 
 
 %}

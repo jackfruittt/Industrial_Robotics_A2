@@ -243,10 +243,10 @@ classdef robotControl
                 
                 T_rightEndEffector = robot.env.pr2LeftArm.model.fkine(qMatrix(i, :)).T;
                 
-                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
-                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperl1.model.base = T_rightEndEffector * offset;
+                robot.env.gripperr1.model.base = T_rightEndEffector * offset;
                 
-                robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperLeftState);
+                robot.animatePR2Grippers(robot.env.gripperl1, robot.env.gripperr1, PR2GripperLeftState);
                 
                 drawnow();
             end
