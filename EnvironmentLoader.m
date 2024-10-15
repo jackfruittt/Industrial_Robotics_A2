@@ -101,14 +101,67 @@ classdef EnvironmentLoader
             %     ,[0.01, 0.01; 0.01, 0.01] ...
             %     ,'CData', imread('images/floor_wood.jpg') ...
             %     ,'FaceColor', 'texturemap');
+
+            % Using surf for now to place images onto the environment
+            % X + offset
+            % Y + offset
+            % Z + offset
+            % Move the -ve around to adjust image orientation
+
+            surf([0.01, 0.01; 0.01, 0.01] - 1.6, ... % X coordinates (after rotation, becomes depth)
+                [-0.3, 0.3; -0.3, 0.3] + 1.6, ... % Y coordinates (horizontal width remains unchanged)
+                [0.3, 0.3; -0.3, -0.3] + 1.5, ... % Z coordinates (shift up by adding 2 to the height)
+                'CData', imread('images/FootProtectionSafety.jpg'), ...
+                'FaceColor', 'texturemap');
+
+            surf([0.01, 0.01; 0.01, 0.01] -1.6, ... % X coordinates (after rotation, becomes depth)
+                [-0.3, 0.3; -0.3, 0.3] + 1.6, ... % Y coordinates (horizontal width remains unchanged)
+                [0.3, 0.3; -0.3, -0.3] + 0.8, ... % Z coordinates (shift up by adding 2 to the height)
+                'CData', imread('images/HairNetSafety.jpg'), ...
+                'FaceColor', 'texturemap');
+
+            surf([0.5, -0.5; 0.5, -0.5] + 1.7, ... % X coordinates (after rotation, becomes depth)
+                [0.01, 0.01; 0.01, 0.01] - 2.15, ... % Y coordinates (horizontal width remains unchanged)
+                [0.5, 0.5; -0.5, -0.5] + 1, ... % Z coordinates (shift up by adding 2 to the height)
+            'CData', imread('images/Storyboard.png'), ...
+            'FaceColor', 'texturemap');   
+
             kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0.2, 0, 0], 1, kitchenRotations)
 
-            bananaRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, -0.8, 0.82], 1, bananaRotations)
+            bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0, 0.82], 1, bananaRotations)
+
+            boardRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/cutting_board.ply',[1.0, 0, 0.8], 1, boardRotations)
+
 
             hazardLightRotations = { {0, 'XY'}, {0, 'XZ'}, {-90, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/hazard_light.ply',[1.0, -2.13, 1.5], 0.1, hazardLightRotations)
+
+            fireExtinguisherRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} }; 
+            obj.CustomPlaceObject('plyFiles/Scenery/fireExtinguisher.ply',[1.0, -2.05, 0], 1, fireExtinguisherRotations)
+
+            eStopRotations = { {0, 'XY'}, {0, 'XZ'}, {-90, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/emergencyStopButton.ply', [1.0, -2.13, 1], 1, eStopRotations)
+
+            barrier1 = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/SafetyBarrier.ply',[2.5, -1.55, 0.2], 0.2, barrier1)
+            obj.CustomPlaceObject('plyFiles/Scenery/SafetyBarrier.ply',[2.5, -0.35, 0.2], 0.2, barrier1)
+            obj.CustomPlaceObject('plyFiles/Scenery/SafetyBarrier.ply',[2.5, 0.85, 0.2], 0.2, barrier1)
+
+            barrier2 = { {-35, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/SafetyBarrier.ply',[2, 1.85, 0.2], 0.2, barrier2)
+
+            barrier3 = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/SafetyBarrier.ply',[0.87, 2.18, 0.2], 0.2, barrier3)
+            obj.CustomPlaceObject('plyFiles/Scenery/SafetyBarrier.ply',[-0.35, 2.18, 0.2], 0.2, barrier3)
+
+            doorRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/door.ply',[0.21, -2.15, 0.15], 0.9, doorRotations)
+            
+
+
 
         end
         

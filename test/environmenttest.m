@@ -1,7 +1,9 @@
 clc; clf;
 grid on; hold on;
-axis([-4.5 4.5 -3.5 3.5 0 3.5]);
+axis([-1.9 3.5 -2.5 2.5 0 2.3]);
 
-view(130, 20);
+view(120, 30);
+%view(90,10);
 
 env = EnvironmentLoader();
+
