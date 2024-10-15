@@ -1,12 +1,20 @@
 clc;
 clf;
 
-tm5 = TM5900.TM5900();
+%tm5 = TM5900.TM5900();
+
+tm5Gripper = TM5900.TM5Gripper();
+%pr2gripper = PR2.PR2LeftGripper();
 
 q = zeros(1,6);
+qGripper = zeros(1, 3);
 
-tm5.model.animate(q);
-tm5.model.teach();
+%tm5.model.animate(q);
+%tm5.model.teach();
+
+tm5Gripper.model.animate(qGripper);
+tm5Gripper.model.teach(qGripper);
+
 %{
 numSteps = 50;
 leftStartPos = transl(0, -0.236, 1.092);

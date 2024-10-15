@@ -13,6 +13,10 @@ classdef robotControl
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PR2 FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         function movePR2ArmsRMRC(robot, leftStartTr, leftEndTr, rightStartTr, rightEndTr, steps, deltaTime, lambda, epsilon, eStop)
+
+            global PR2GripperLeftState PR2GripperRightState;
+            
+            offset = troty(-pi/2) * transl(0.05, 0, 0);
             
             % Use ikcon to get initial joint angles from given pose
             qStartLeft = robot.env.pr2LeftArm.model.ikcon(leftStartTr);
@@ -70,6 +74,19 @@ classdef robotControl
                 robot.checkPause(eStop);
                 robot.env.pr2LeftArm.model.animate(qMatrixLeft(i,:));
                 robot.env.pr2RightArm.model.animate(qMatrixRight(i,:));
+
+                T_leftEndEffector = robot.env.pr2LeftArm.model.fkine(qMatrixLeft(i, :)).T;
+                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T;
+                
+                robot.env.gripperl1.model.base = T_leftEndEffector  * offset;
+                robot.env.gripperr1.model.base = T_leftEndEffector * offset;
+                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                
+                % Animate grippers based on their current state
+                robot.animatePR2Grippers(robot.env.gripperl1, robot.env.gripperr1, PR2GripperLeftState);
+                robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
+
                 drawnow();
             end
 

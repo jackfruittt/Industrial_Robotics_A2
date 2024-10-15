@@ -24,6 +24,7 @@ classdef EnvironmentLoader
         pr2Left
 
         tm5900
+        tm5900Gripper
 
     end
     
@@ -34,6 +35,12 @@ classdef EnvironmentLoader
             obj.loadCustomObjects();
             compEnv = 1;
             if compEnv
+                % Make tm5900, edit base position if required
+                obj.tm5900 = TM5900.TM5900(transl(1.0,0.8,0.78))
+
+                % Make tm5900 gripper, same as above
+                obj.tm5900Gripper = TM5900.TM5Gripper((obj.tm5900.model.fkine([0 0 0 0 0 0]).T))
+                
                 % Make pr2Prismatic base + Arms
                 obj.pr2Base = PR2.PR2Base();
                 obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
@@ -100,8 +107,9 @@ classdef EnvironmentLoader
             bananaRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, -0.8, 0.82], 1, bananaRotations)
 
-            %bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            %obj.CustomPlaceObject('plyFiles/Scenery/banana.ply',[0.8, 0, 0.45], 1, bananaRotations)
+            hazardLightRotations = { {0, 'XY'}, {0, 'XZ'}, {-90, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/hazard_light.ply',[1.0, -2.13, 1.5], 0.1, hazardLightRotations)
+
         end
         
         %Custom PlaceObject function that plots ply files based off the RTB PlaceObject function.
