@@ -39,6 +39,7 @@ classdef EnvironmentLoader
                 obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
                 obj.pr2RightArm = PR2.PR2RightArm(obj.pr2Base.model.base.T);
                 obj.pr2KnifeArm = Knife.robotKnife();
+                obj.tm5700 = TM5.TM5900();
                 %obj.pr2Left = PR2Left();
                 %obj.pr2Right = PR2Right();
 
@@ -96,6 +97,9 @@ classdef EnvironmentLoader
 
             boardRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/cutting_board.ply',[1.0, 0, 0.80], 1, boardRotations)
+
+            blockRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/knife_block.ply',[1.0, -0.5, 0.80], 1, blockRotations)
 
             %bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             %obj.CustomPlaceObject('plyFiles/Scenery/banana.ply',[0.8, 0, 0.45], 1, bananaRotations)

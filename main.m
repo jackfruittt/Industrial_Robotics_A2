@@ -8,6 +8,7 @@ axis([-4.5 4.5 -3.5 3.5 0 3.5]);
 view(90, 10);  
 % Load environment
 eStop = serial('COM3', 'BaudRate', 9600);  
+fakeKnife = PlaceObject("plyFiles/Scenery/knife.ply", [0.89, -0.49, 0.86]);
 env = EnvironmentLoader();
 laser = pr2Laser();
 gripperLeftState = 'closed';

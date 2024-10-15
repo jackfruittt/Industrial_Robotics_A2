@@ -446,8 +446,8 @@ classdef robotControl
         function animateTM5(robot, startPos, endPos, numSteps, eStop)
             
             
-            q1 = robot.env.tm5900.model.ikcon(startPos);
-            q2 = robot.env.tm5900.model.ikcon(endPos);
+            q1 = robot.env.tm5700.model.ikcon(startPos);
+            q2 = robot.env.tm5700.model.ikcon(endPos);
             
             % LSPB trajectory for smooth transition
             sr = lspb(0, 1, numSteps); 
@@ -462,7 +462,7 @@ classdef robotControl
             for i = 1:numSteps
                 robot.checkPause(eStop); % Check for pause signal
                 
-                robot.env.tm5900.model.animate(qPrer(i, :));
+                robot.env.tm5700.model.animate(qPrer(i, :));
                 
                 %Build Gripper and Modify later
                 %T_leftEndEffector = robot.env.pr2Left.model.fkine(qPrel(i, :)).T;
@@ -499,7 +499,7 @@ classdef robotControl
             for i = 1:numSteps
                 robot.checkPause(eStop);
                 
-                robot.env.tm5900.model.animate(qMatrix(i, :));
+                robot.env.tm5700.model.animate(qMatrix(i, :));
                 
                 %T_rightEndEffector = robot.env.pr2Right.model.fkine(qMatrix(i, :)).T;
                 

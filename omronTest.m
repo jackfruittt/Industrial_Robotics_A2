@@ -1,17 +1,17 @@
 clc;
 clf;
 
-tm5 = TM5900.TM5900();
+tm5 = TM5.TM5700();
 
 q = zeros(1,6);
 
 tm5.model.animate(q);
 tm5.model.teach();
-%{
+%
 numSteps = 50;
-leftStartPos = transl(0, -0.236, 1.092);
+leftStartPos = transl(0, -0.136, 1.092);
 
-leftEndPos = transl(-0.115, -0.445, 0.207);
+leftEndPos = transl(-0.115, -0.145, 0.207);
 
 q3 = tm5.model.ikcon(leftStartPos);
 q4 = tm5.model.ikcon(leftEndPos);
@@ -31,4 +31,3 @@ for i = 1:numSteps
     
     drawnow(); %
 end
-%}
