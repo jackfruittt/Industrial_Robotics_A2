@@ -13,6 +13,7 @@ env = EnvironmentLoader();
 laser = pr2Laser();
 gripperLeftState = 'closed';
 gripperRightState = 'closed';
+gripperRightStateKnife = 'closed';
 robot = robotControl(env);
 
 sensor_position = [0.35, 0, 1.35]; 
@@ -22,11 +23,6 @@ zLength = sensor_position(3) - centerPoint(3);
 radii = [0.08, 0.15, 0.06]; 
 laser_rotation = atan(xLength/zLength);
 disp(laser_rotation);
-
-dt = 0.05;                    % Time step
-steps = 50;                   % Number of steps
-lambda = 0.01;                % Damping factor for singularity handling
-epsilon = 0.00000001;             % Threshold for detecting singularities
 
 numSteps = 30;
 
@@ -59,12 +55,9 @@ pr2RightPos1 = transl(0.250, -1.001, 0.825);
 pr2leftPos1 = transl(0.250, 1.001, 0.825);
 
 %Pos 2 is Pos 1 with Z adjustment
-pr2RightPos2 = transl(0.4, -0.6, 0.87) * troty(pi/2);
+pr2RightPos1h = transl(0.250, -1.001, 1.125);
+pr2RightPos2 = transl(0.6, -0.6, 0.87) * troty(pi/2);
 %pr2leftPos2 = transl(0.250, 1.001, 1.125);
-%RMRC Positions
-%T1Pos = [eye(3), [0.241, -0.180, -0.198]'; zeros(1, 3), 1];  % Initial position
-pr2PosRMRCh = [eye(3), [0.4, -0.6, 0.87]'; zeros(1, 3), 1];
-pr2PosRMRC1 = [eye(3), [0.57, -0.6, -0.87]'; zeros(1, 3), 1];  % Final position
 %Pos 3 is Pos h with Z adjustment
 %pr2RightPos3 = transl(1.071, -0.180, 1.125) * troty(-pi/2);
 %pr2leftPos3 = transl(1.071, 0.180, 1.125) * troty(-pi/2);
@@ -72,7 +65,7 @@ pr2PosRMRC1 = [eye(3), [0.57, -0.6, -0.87]'; zeros(1, 3), 1];  % Final position
 % Call functions from robotControl to move pr2 
 % Move arm -> base up -> move arm -> base down
 robot.animatePR2ArmsAndGrippers(pr2RightPosH, pr2RightPos1, pr2leftPosH, pr2leftPos1, numSteps, eStop);
-robot.PR2BothGrippersOpen(numSteps, eStop);
+%robot.PR2BothGrippersOpen(numSteps, eStop);
 robot.animatePR2Base(startTr, endTr, numSteps, eStop); %Move torso up
 
 %Scan for the banana
@@ -110,10 +103,13 @@ q4 = env.pr2LeftArm.model.ikcon(transl(0.882, 0.406, 1.146));
 q5 = deg2rad([15.5 129 -168 83.3 -180 48 0]);
 q6 = deg2rad([15.5 101 -168 80.9 -180 48 -20]);
 qWpmat = [pr2LeftWayPosStart; q1; q2; q3; q4; q5; q6];
-robot.animatePR2LeftArmsAndGrippersWithWaypoints(qWpmat, 100, eStop);
-robot.animatePR2RightArmsAndGrippers(pr2RightPos1, pr2RightPos2, numSteps, eStop);
-robot.animatePR2SingleRightJoint(3, 30, 30);
-%robot.animatePR2RightArmRMRC(pr2PosRMRCh, pr2PosRMRC1, numSteps, dt, lambda, epsilon, eStop);
+%robot.animatePR2LeftArmsAndGrippersWithWaypoints(qWpmat, 100, eStop);
+robot.animatePR2RightArmsAndGrippers(pr2RightPos1h, pr2RightPos2, numSteps, eStop);
+robot.PR2GrabKnife(numSteps, eStop);
+deletePlyObject(fakeKnife);
+robot.animateRightPR2ArmsAndGrippersWithKnife(pr2RightPos2, pr2RightPos1h, numSteps, eStop);
+%robot.animatePR2SingleRightJoint(1, -10, 30);
+%robot.animatePR2SingleRightJoint(6, -45, 30);
 
 
 

@@ -29,7 +29,7 @@ classdef robotKnife < RobotBaseClass
         %% AttachToEndEffector
         function attachToEndEffector(self, T)
             % Method to attach knife to a robot end effector
-            self.model.base = T * trotx(pi) * troty(-pi/2) * transl(-0.25, 0, 0);
+            self.model.base = T * trotx(pi) * troty(-pi/2) * transl(-0.23, -0.01, -0.025);
             self.model.animate(0);
         end
     end

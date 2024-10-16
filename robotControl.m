@@ -116,6 +116,16 @@ classdef robotControl
                 gripperRight.model.animate([0, 0]);
             end
         end
+
+        function animatePR2GripperRightKnife(~, gripperLeft, gripperRight, state)
+            if strcmp(state, 'open')
+                gripperLeft.model.animate([deg2rad(18), deg2rad(-18)]);
+                gripperRight.model.animate([deg2rad(-18), deg2rad(18)]);
+            else
+                gripperLeft.model.animate([deg2rad(6), deg2rad(-6)]);
+                gripperRight.model.animate([deg2rad(-6), deg2rad(6)]);
+            end
+        end
         
         function animatePR2RightArmsAndGrippers(robot, rightStartPos, rightEndPos, numSteps, eStop)
             global PR2GripperRightState;
@@ -151,7 +161,7 @@ classdef robotControl
         end
 
         function animateRightPR2ArmsAndGrippersWithKnife(robot, rightStartPos, rightEndPos, numSteps, eStop)
-            global gripperRightState;
+            global PR2GripperRightStateKnife;
             
             gripperOffset = troty(-pi/2) * transl(0.05, 0, 0); 
             
@@ -178,7 +188,7 @@ classdef robotControl
                 robot.env.gripperr2.model.base = tRightEndEffector * gripperOffset;
                 robot.env.pr2KnifeArm.attachToEndEffector(robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T);
         
-                robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, gripperRightState);
+                robot.animatePR2GripperRightKnife(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightStateKnife);
                 
                 drawnow(); % Update the figure
             end
@@ -383,21 +393,25 @@ classdef robotControl
         end
 
         function animatePR2SingleRightJoint(robot, jointToMove, targetAngleDeg, steps)
-        
-            currentConfig = robot.env.r2RightArm.model.getpos();  
+            global PR2GripperRightState;
             
+            currentConfig = robot.env.pr2RightArm.model.getpos();  
             targetAngleRad = deg2rad(targetAngleDeg);
-        
             angles = linspace(currentConfig(jointToMove), targetAngleRad, steps);
-        
             qTarget = currentConfig;
-        
+            offset = troty(-pi/2) * transl(0.05, 0, 0);
+            
             for i = 1:length(angles)
                 qTarget(jointToMove) = angles(i);  
                 robot.env.pr2RightArm.model.animate(qTarget);  
+                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qTarget).T;
+                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 drawnow();  
             end
         end
+        
         
         function animatePR2LeftArmsAndGrippers(robot, leftStartPos, leftEndPos, numSteps, eStop)
             global PR2GripperLeftState;
@@ -521,7 +535,7 @@ classdef robotControl
         end
 
         function animatePR2RightGripperforKnife(robot, numSteps, openOrClose)
-            global PR2GripperRightState;
+            global PR2GripperRightStateKnife;
             %robot.PR2GripperRightState;
             
             % Define the joint limits
@@ -533,11 +547,11 @@ classdef robotControl
             if strcmp(openOrClose, 'open')
                 qMatrixLeft = jtraj(qLeftClose, qLeftOpen, numSteps);
                 qMatrixRight = jtraj(qRightClose, qRightOpen, numSteps);
-                PR2GripperRightState = 'open';
+                PR2GripperRightStateKnife = 'open';
             else
                 qMatrixLeft = jtraj(qLeftOpen, qLeftClose, numSteps);
                 qMatrixRight = jtraj(qRightOpen, qRightClose, numSteps);
-                PR2GripperRightState = 'closed';
+                PR2GripperRightStateKnife = 'closed';
             end
             
             % Animate the gripper opening or closing
