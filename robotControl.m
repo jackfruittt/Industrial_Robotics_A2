@@ -193,6 +193,68 @@ classdef robotControl
                 drawnow(); % Update the figure
             end
         end
+
+        function hybridPR2RightArmControl(robot, rightStartTr, rightEndTr, steps, deltaTime, lambda, epsilon, eStop)
+
+            global PR2GripperRightStateKnife;
+            
+            gripperOffset = troty(-pi/2) * transl(0.05, 0, 0);
+            
+            qStartRight = robot.env.pr2RightArm.model.ikcon(rightStartTr);
+            
+            qMatrixRight = zeros(steps, 7);
+        
+            qMatrixRight(1,:) = qStartRight;
+        
+            rightArmCTraj = ctraj(rightStartTr, rightEndTr, steps);
+        
+            % RMRC loop with fallback to IK
+            for i = 1:steps-1
+                
+                qRight = qMatrixRight(i, :);
+                tRight = robot.env.pr2RightArm.model.fkine(qRight).T;
+        
+                % Compute Cartesian velocity for RMRC
+                vRight = tr2delta(tRight, rightArmCTraj(:,:,i+1)) / deltaTime;
+        
+                % Compute Jacobian at current joint configuration
+                jRight = robot.env.pr2RightArm.model.jacob0(qRight);
+        
+                % Damped Least Squares (DLS) to handle singularities
+                if abs(det(jRight * jRight')) < epsilon
+                    qRightDot = (jRight' / (jRight * jRight' + lambda^2 * eye(6))) * vRight;
+                else
+                    qRightDot = jRight \ vRight;
+                end
+        
+                % Check if RMRC can continue or fallback to IK based on joint velocity
+                if any(abs(qRightDot) > 2)  % If joint velocity is too high or unstable
+                    disp('Switching to IK due to high joint velocities or instability...');
+                    % Use IK to compute the next joint configuration
+                    qMatrixRight(i+1,:) = robot.env.pr2RightArm.model.ikcon(rightArmCTraj(:,:,i+1));
+                else
+                    % RMRC - update joint angles using Euler integration
+                    qMatrixRight(i+1,:) = qRight + qRightDot' * deltaTime;
+                end
+            end
+        
+            for i = 1:steps
+    
+                robot.checkPause(eStop);
+
+                robot.env.pr2RightArm.model.animate(qMatrixRight(i,:));
+
+                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i,:)).T;
+        
+                robot.env.gripperl2.model.base = T_rightEndEffector * gripperOffset;
+                robot.env.gripperr2.model.base = T_rightEndEffector * gripperOffset;
+                robot.env.pr2KnifeArm.attachToEndEffector(T_rightEndEffector);
+        
+                robot.animatePR2GripperRightKnife(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightStateKnife);
+                drawnow();
+            end
+        end
+        
         
         function animatePR2RightArmsAndGrippersWithWaypoints(robot, qWaypoints, numSteps, eStop)
             global PR2GripperRightState;

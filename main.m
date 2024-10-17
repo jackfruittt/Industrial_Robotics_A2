@@ -16,6 +16,11 @@ gripperRightState = 'closed';
 gripperRightStateKnife = 'closed';
 robot = robotControl(env);
 
+dt = 0.05;                    % Time step
+steps = 50;                   % Number of steps
+lambda = 0.01;                % Damping factor for singularity handling
+epsilon = 0.00000001;             % Threshold for detecting singularities
+
 sensor_position = [0.35, 0, 1.35]; 
 centerPoint = [1.0, 0, 0.82]; 
 xLength = centerPoint(1) - sensor_position(1);
@@ -78,7 +83,8 @@ Ry = [cos(theta_y), 0, sin(theta_y);
       -sin(theta_y), 0, cos(theta_y)];
 end
 % Position 2 with rotation (right arm) in the form [R, translation; zeros(1, 3), 1]
-pr2RightPos2 = [customTroty(90), [0.600; -0.600; 0.870]; zeros(1, 3), 1];
+pr2RightPos2t = [eye(3), [0.600; -0.600; 0.870]; zeros(1, 3), 1];
+pr2RightPos2 = pr2RightPos2t * troty(pi/2);
 
 % Call functions from robotControl to move pr2 
 % Move arm -> base up -> move arm -> base down
@@ -96,6 +102,8 @@ bananaR = [eye(3), [firstCoord(1); firstCoord(2); firstCoord(3)]; zeros(1, 3), 1
 bananaRTr = bananaR * transl(0, 0, 1);
 bananaL = transl(lastCoord) * transl(-0.2, 0, 0) * troty(pi/2);
 
+pr2RightPos3 = [eye(3), [1.071; -0.180; 1.125]; zeros(1, 3), 1];
+pr2RightPos4 = [eye(3), [0.980; -0.180; 1.125]; zeros(1, 3), 1];
 %Animating moves the left arm to the left end of the banana but in an undesirable position, use waypoint animations
 pr2LeftWayPosStart = env.pr2LeftArm.model.ikcon(pr2LeftPos1);
 %W1 
@@ -107,14 +115,19 @@ q3 = deg2rad([-90 128 -180 0 180 0 0]);
 %W4
 q4 = env.pr2LeftArm.model.ikcon(transl(0.882, 0.406, 1.146));
 q5 = deg2rad([15.5 129 -168 83.3 -180 48 0]);
-q6 = deg2rad([15.5 101 -168 80.9 -180 48 -20]);
+q6 = deg2rad([5 101 -140 80.9 -180 48 -20]);
 qWpmat = [pr2LeftWayPosStart; q1; q2; q3; q4; q5; q6];
 robot.animatePR2LeftArmsAndGrippersWithWaypoints(qWpmat, 100, eStop);
+robot.PR2RightGripperOpen(50, eStop);
 robot.animatePR2RightArmsAndGrippers(pr2RightPos1h, pr2RightPos2, numSteps, eStop);
+%robot.animatePR2SingleRightJoint(5, 180, numSteps);
+%robot.animatePR2SingleRightJoint(6, -90, numSteps);
 robot.PR2GrabKnife(numSteps, eStop);
 deletePlyObject(fakeKnife);
 robot.animateRightPR2ArmsAndGrippersWithKnife(pr2RightPos2, pr2RightPos1h, numSteps, eStop);
 robot.animateRightPR2ArmsAndGrippersWithKnife(pr2RightPos1h, bananaRTr, numSteps, eStop);
+robot.animateRightPR2ArmsAndGrippersWithKnife(bananaRTr, pr2RightPos3, numSteps, eStop);
+robot.hybridPR2RightArmControl(pr2RightPos3, pr2RightPos4, numSteps, dt, lambda, epsilon, eStop);
 %robot.animatePR2SingleRightJoint(1, -10, 30);
 %robot.animatePR2SingleRightJoint(6, -45, 30);
 
