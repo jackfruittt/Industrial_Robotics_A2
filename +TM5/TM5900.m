@@ -17,7 +17,7 @@ classdef TM5900 < RobotBaseClass
                 if nargin == 2
                     error('If you set useTool you must pass in the toolFilename as well');
                 elseif nargin == 0 % Nothing passed
-                    baseTr = transl(1,2,0);
+                    baseTr = transl(0,0,0);
                 end
             else % All passed in
                 self.useTool = useTool;
@@ -44,12 +44,12 @@ classdef TM5900 < RobotBaseClass
             link(5) = Link([0      0.106      0        pi/2         0]);        
             link(6) = Link([0      0.1132     0        0            0]);         
             
-            link(1).qlim = deg2rad([-360 360]);
-            link(2).qlim = deg2rad([-360 360]);
-            link(3).qlim = deg2rad([-360 360]);
-            link(4).qlim = deg2rad([-360 360]);
-            link(5).qlim = deg2rad([-360 360]);
-            link(6).qlim = deg2rad([-360 360]);
+            link(1).qlim = deg2rad([-180 180]);
+            link(2).qlim = deg2rad([-180 180]);
+            link(3).qlim = deg2rad([-180 180]);
+            link(4).qlim = deg2rad([-180 180]);
+            link(5).qlim = deg2rad([-180 180]);
+            link(6).qlim = deg2rad([-180 180]);
             
             link(2).offset = -pi/2;
             link(4).offset = pi/2;

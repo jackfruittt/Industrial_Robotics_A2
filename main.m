@@ -7,14 +7,12 @@ axis([-4.5 4.5 -3.5 3.5 0 3.5]);
 
 view(90, 10);  
 % Load environment
-eStop = serial('COM3', 'BaudRate', 9600);  
+eStop = serialport('COM3', 'BaudRate', 9600);  
 env = EnvironmentLoader();
-robot = robotControl(env);
 laser = pr2Laser();
 gripperLeftState = 'closed';
 gripperRightState = 'closed';
 robot = robotControl(env);
-eStop = serial('COM3', 'BaudRate', 9600);
 view(90, 10);  
 
 sensor_position = [0.125, 0, 0.9]; 
@@ -61,6 +59,7 @@ robot.animatePR2ArmsAndGrippers(homePosr, Tbr, homePosl, Tbl, numSteps, eStop);
 robot.animatePR2Base(startTr, endTr, numSteps, eStop);
 robot.animatePR2ArmsAndGrippers(Tb3r, Tb4r, Tb3l, Tb4l, numSteps, eStop);
 robot.animatePR2Base(startTr1, endTr1, numSteps, eStop);
+robot.animateRightPR2ArmsAndGrippersWithKnife(Tb4r, Tbr, numSteps, eStop);
 
 
 function deletePlyObject(objectHandle)

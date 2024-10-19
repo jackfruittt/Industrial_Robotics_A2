@@ -13,7 +13,7 @@ classdef TM5Gripper < RobotBaseClass
                 baseTr = eye(4); 
             end
             self.model.base = baseTr * transl(0, -0.012, 0);
-            %self.PlotAndColourRobot();
+            self.PlotAndColourRobot();
            
         end
         function CreateModel(self)
@@ -31,7 +31,7 @@ classdef TM5Gripper < RobotBaseClass
 
             % Create SerialLink for the gripper
             self.model = SerialLink(link, 'name', self.name);
-            self.model.teach();
+            %self.model.teach();
         end
     end
 end
