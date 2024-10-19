@@ -33,7 +33,7 @@ classdef EnvironmentLoader
         function obj = EnvironmentLoader() % Constructor to initialize the environment
             %
             obj.loadCustomObjects();
-            compEnv = 1;
+            compEnv = 0;
             if compEnv
                 % Make tm5900, edit base position if required
                 obj.tm5700 = TM5.TM5700(transl(1.0,0.8,0.78));
@@ -71,6 +71,7 @@ classdef EnvironmentLoader
                 obj.pr2Base = PR2.PR2Base();
                 obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
                 obj.pr2RightArm = PR2.PR2RightArm(obj.pr2Base.model.base.T);
+                obj.tm5700 = TM5.TM5700(transl(1.0,0.8,0.78));
                 % light('Position', [1 1 1], 'Style', 'infinite');
                 % lighting gouraud;  
                 % material shiny;   

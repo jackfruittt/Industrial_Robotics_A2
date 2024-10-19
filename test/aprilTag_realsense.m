@@ -1,3 +1,5 @@
+% From S&C realted project, can try implment into IR later
+
 % Initialize camera object
 camera = realsense.pipeline();
 config = realsense.config();
@@ -60,7 +62,7 @@ for i = 1:200
     tagFamily = "tag36h11";  
     [id, loc, pose] = readAprilTag(I, tagFamily, intrinsics, tagSize);
     
-    %figure(2);  % Switch to figure 2
+    figure(2);  % Switch to figure 2
     imshow(color_image);  % Display the color image
     hold on;
     
@@ -105,7 +107,7 @@ for i = 1:200
         
         imshow(color_image);  % Refresh the displayed image in figure 2
         
-        %figure(1);  % Switch to figure 1 (3D plot)
+        figure(1);  % Switch to figure 1 (3D plot)
         
         if ~isempty(hTagPosition)
             delete(hTagPosition);
