@@ -17,9 +17,9 @@ tm5Gripper.model.teach(qGripper);
 
 %{
 numSteps = 50;
-leftStartPos = transl(0, -0.236, 1.092);
+leftStartPos = transl(0, -0.136, 1.092);
 
-leftEndPos = transl(-0.115, -0.445, 0.207);
+leftEndPos = transl(-0.115, -0.145, 0.207);
 
 q3 = tm5.model.ikcon(leftStartPos);
 q4 = tm5.model.ikcon(leftEndPos);
@@ -39,4 +39,3 @@ for i = 1:numSteps
     
     drawnow(); %
 end
-%}

@@ -46,6 +46,7 @@ classdef EnvironmentLoader
                 obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
                 obj.pr2RightArm = PR2.PR2RightArm(obj.pr2Base.model.base.T);
                 obj.pr2KnifeArm = Knife.robotKnife();
+                %obj.tm5700 = TM5.TM5900();
                 %obj.pr2Left = PR2Left();
                 %obj.pr2Right = PR2Right();
 
@@ -78,15 +79,9 @@ classdef EnvironmentLoader
                 
                 qz = [0 pi/2 0 0 0 0 0];
                 q = [0 0 0 0 0 0];
-                tr = obj.pr2Right.model.fkine(qz);
-                tr1 = obj.pr2Left.model.fkine(qz);
-                obj.pr2Left.model.teach(tr1);
-                obj.pr2Right.model.teach(tr);
-                obj.tm5900.model.teach();
-                obj.pr2Left.model.animate(qz);
-                obj.pr2Right.model.animate(qz);
-                obj.tm5900.model.animate(q);
-                
+                obj.pr2LeftArm.model.teach();
+                obj.pr2RightArm.model.teach();
+                              
             end
         end
 
