@@ -531,29 +531,28 @@ classdef robotControl
 
         function animateTM5RMRC(robot, startTr, endTr, steps, deltaTime, lambda, epsilon, eStop)
             qStart = robot.env.tm5700.model.ikcon(startTr);
-            qEnd = robot.env.tm5700.model.ikcon(endTr);
-
+            
             qMatrix = zeros(steps, 6);
             qMatrix(1,:) = qStart;
 
             cartesianTrajectory = ctraj(startTr, endTr, steps);
 
             for i = 1:steps-1
-                qMatrix = qMatrix(i, :);
+                qCurrent = qMatrix(i, :);
 
-                currentTr = robot.env.tm5700.model.fkine(qMatrix).T;
+                currentTr = robot.env.tm5700.model.fkine(qCurrent).T;
 
                 cartesianVelocity = tr2delta(currentTr, cartesianTrajectory(:,:,i+1)) / deltaTime;
 
-                jacobian = robot.env.tm5700.model.jacob0(qMatrix);
+                jacobian = robot.env.tm5700.model.jacob0(qCurrent);
                 
                 if abs(det(jacobian * jacobian')) < epsilon
-                    qDot = (jacobian' / (jacobian * jacobian' + lambda^2 * eye(6))) * cartesianVelocity;
+                    qDot = (jacobian' / jacobian * jacobian' + lambda^2 * eye(6)) * cartesianVelocity;
                 else
                     qDot = jacobian \ cartesianVelocity;
                 end
 
-                qMatrix(i+1,:) = qMatrix + qDot' * deltaTime;
+                qMatrix(i+1,:) = qCurrent + qDot' * deltaTime
             end
 
             for i = 1:steps
@@ -569,7 +568,7 @@ classdef robotControl
             robot.env.tm5700.model.animate(q0');
             drawnow;
         
-            %camera.T = robotTr * cameraOffset;
+            %camera.T = robotTr * cameraOffset; % Uncomment to apply offset, edit input param
             camera.T = robotTr;
             camera.plot_camera('label', 'scale', 0.05, 'frustum', true);
             plot_sphere(P, 0.03, 'b');
@@ -603,10 +602,10 @@ classdef robotControl
             % Initialize history storage for plotting results
             history = [];
             steps = 0;
-            errorThreshold = 10;
+            errorThreshold = [10, 1000];
             depth = mean(P(1, :));
 
-            %pause(100)
+            pause(5)
         
             while true
                 robot.checkPause(eStop);
@@ -626,9 +625,12 @@ classdef robotControl
         
                 % Check if the error is within the acceptable range
                 errorNorm = norm(error)  % Check error magnitude
-                if errorNorm < errorThreshold
+                if errorNorm < errorThreshold (1)
                     disp('Error within acceptable range. Exiting...');
                     break;  % Exit the visual servoing loop if the error is below the minimum threshold
+                elseif errorThreshold(2) < errorNorm  
+                    disp('Error too large. Exiting...');
+                    break;
                 end
                 
                 % compute the velocity of camera in camera frame

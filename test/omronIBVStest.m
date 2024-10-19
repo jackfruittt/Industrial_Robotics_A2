@@ -30,9 +30,13 @@ pStar = [262 762 762 262;  % uTL, uTR, uBL, uBR
 %     0.82, 0.82, 0.82, 0.82];
 
 %    P4    P3   P2    P1
-P = [0.9 , 1.1, 1.1, 0.9;
-     0.4, 0.4, 0.6, 0.6;
-     0.82, 0.82, 0.82, 0.82];
+P = [0.9 , 1.1, 1.1, 0.9; ... X
+     0.4, 0.4, 0.6, 0.6; ... Y
+     0.82, 0.82, 0.82, 0.82]; ... Z
+
+%P2 = [0.9 , 1.1, 1.1, 0.9; ... X
+%     -0.2, -0.2, 0.2, 0.2; ... Y
+%     0.82, 0.82, 0.82, 0.82]; ... Z
 
 
 fps = 25;
@@ -145,6 +149,29 @@ function TM5700_IBVS(robot, q0, camera, cameraOffset, pStar, P, fps, lambda)
     end
 end
 
+currentQ = robot.env.tm5700.model.getpos();
+disp(currentQ)
+
+robot.env.tm5700.model.teach(currentQ);
+
+T1 = robot.env.tm5700.model.fkine(currentQ)
+T2 = T1.T * transl(0, 0, 0.24)
+T2 = SE3(T2)
+
+
+%T1 = SE3([1.000, 0.5, 1.140]) * SE3.Rx(0.0001) * SE3.Ry(-0.0004) * SE3.Rz(0.0056);
+%T2 = SE3([1.000, 0.5, 0.900]) * SE3.Rx(0.0001) * SE3.Ry(-0.0004) * SE3.Rz(0.0056);
+
+
+%T1 = [eye(3), [1.000, 0.5, 1.140]'; zeros(1, 3), 1];
+%T2 = [eye(3), [1.000, 0.5, 0.9]'; zeros(1, 3), 1];
+
+deltaTime = 0.05;
+steps = 50;
+lamda = 0.01;
+epsilon = 0.1;
+
+robot.animateTM5RMRC(T1, T2, steps, deltaTime, lamda, epsilon, eStop);
 
 
 

@@ -12,12 +12,14 @@ env = EnvironmentLoader();
 robot = robotControl(env);
 view(90, 10); 
 
-deltaTime = 10.05;
+deltaTime = 0.05;
 steps = 50;
 lamda = 0.01;
-epsilon = 0.1;
+epsilon = 0.00001;
 
 robot.env.tm5700.model.teach();
+
+pause
 
 T1 = [eye(3), [1.000, 0.565, 1.672]'; zeros(1, 3), 1]
 T2 = [eye(3), [1.122, 0.401, 1.034]'; zeros(1, 3), 1]
