@@ -36,10 +36,10 @@ classdef EnvironmentLoader
             compEnv = 1;
             if compEnv
                 % Make tm5900, edit base position if required
-                obj.tm5700 = TM5.TM5700(transl(1.0,0.8,0.78))
+                obj.tm5700 = TM5.TM5700(transl(1.0,0.8,0.78));
 
                 % Make tm5900 gripper, same as above
-                obj.tm5700Gripper = TM5.TM5Gripper((obj.tm5700.model.fkine([0 0 0 0 0 0]).T))
+                obj.tm5700Gripper = TM5.TM5Gripper((obj.tm5700.model.fkine([0 0 0 0 0 0]).T));
                 
                 % Make pr2Prismatic base + Arms
                 obj.pr2Base = PR2.PR2Base();

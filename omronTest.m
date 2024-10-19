@@ -1,9 +1,9 @@
 clc;
 clf;
 
-%tm5 = TM5900.TM5900();
+%tm5 = TM5.TM5700();
 
-tm5Gripper = TM5900.TM5Gripper();
+tm5Gripper = TM5.TM5700();
 %pr2gripper = PR2.PR2LeftGripper();
 
 q = zeros(1,6);

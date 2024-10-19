@@ -490,9 +490,9 @@ classdef robotControl
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OMRON TM5 FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
         function animateTM5(robot, startPos, endPos, numSteps, eStop)
-            
-            
             q1 = robot.env.tm5700.model.ikcon(startPos);
             q2 = robot.env.tm5700.model.ikcon(endPos);
             
@@ -526,6 +526,146 @@ classdef robotControl
                 %robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 
                 drawnow(); % Update the figure
+            end
+        end
+
+        function animateTM5RMRC(robot, startTr, endTr, steps, deltaTime, lambda, epsilon, eStop)
+            qStart = robot.env.tm5700.model.ikcon(startTr);
+            qEnd = robot.env.tm5700.model.ikcon(endTr);
+
+            qMatrix = zeros(steps, 6);
+            qMatrix(1,:) = qStart;
+
+            cartesianTrajectory = ctraj(startTr, endTr, steps);
+
+            for i = 1:steps-1
+                qMatrix = qMatrix(i, :);
+
+                currentTr = robot.env.tm5700.model.fkine(qMatrix).T;
+
+                cartesianVelocity = tr2delta(currentTr, cartesianTrajectory(:,:,i+1)) / deltaTime;
+
+                jacobian = robot.env.tm5700.model.jacob0(qMatrix);
+                
+                if abs(det(jacobian * jacobian')) < epsilon
+                    qDot = (jacobian' / (jacobian * jacobian' + lambda^2 * eye(6))) * cartesianVelocity;
+                else
+                    qDot = jacobian \ cartesianVelocity;
+                end
+
+                qMatrix(i+1,:) = qMatrix + qDot' * deltaTime;
+            end
+
+            for i = 1:steps
+                robot.checkPause(eStop);
+                robot.env.tm5700.model.animate(qMatrix(i,:));
+                drawnow();
+            end
+
+        end
+
+        function TM5700_IBVS(robot, q0, camera, pStar, P, fps, lambda, eStop)
+            robotTr = robot.env.tm5700.model.fkine(q0).T;
+            robot.env.tm5700.model.animate(q0');
+            drawnow;
+        
+            %camera.T = robotTr * cameraOffset;
+            camera.T = robotTr;
+            camera.plot_camera('label', 'scale', 0.05, 'frustum', true);
+            plot_sphere(P, 0.03, 'b');
+        
+            % Project the 3D points to the image plane
+            camera.clf();
+            p = camera.plot(P);  % Initial projection
+            camera.plot(pStar, '*');  % Desired points in the image
+            camera.hold(true);
+            camera.plot(P, 'pose', robotTr, 'o');  % 3D points with camera pose
+            
+            % Label each point in the image view
+            textHandlesP = gobjects(1, size(p, 2));  % Labels for projected points
+            textHandlesPStar = gobjects(1, size(pStar, 2));  % Labels for desired points
+            
+            % Label the initial projected points (P)
+            for i = 1:size(p, 2)
+                textHandlesP(i) = text(p(1, i), p(2, i), sprintf('P%d', i), ...
+                    'Color', 'blue', 'FontSize', 12, 'Parent', gca(camera.figure));
+            end
+            
+            % Label the desired points (pStar)
+            for i = 1:size(pStar, 2)
+                textHandlesPStar(i) = text(pStar(1, i), pStar(2, i), sprintf('p^*%d', i), ...
+                    'Color', 'green', 'FontSize', 12, 'Parent', gca(camera.figure));
+            end
+        
+            pause(2);
+            camera.hold(true);
+            
+            % Initialize history storage for plotting results
+            history = [];
+            steps = 0;
+            errorThreshold = 10;
+            depth = mean(P(1, :));
+
+            %pause(100)
+        
+            while true
+                robot.checkPause(eStop);
+                steps = steps + 1;
+                uv = camera.plot(P);
+                for i = 1:size(uv, 2)
+                    if isvalid(textHandlesP(i))
+                        delete(textHandlesP(i));  % Delete old label
+                    end
+                    textHandlesP(i) = text(uv(1, i), uv(2, i), sprintf('P%d', i), ...
+                                     'Color', 'blue', 'FontSize', 12, 'Parent', gca(camera.figure));
+                end
+        
+                error = pStar - uv;
+                error = error(:);
+                J = camera.visjac_p(uv, depth);
+        
+                % Check if the error is within the acceptable range
+                errorNorm = norm(error)  % Check error magnitude
+                if errorNorm < errorThreshold
+                    disp('Error within acceptable range. Exiting...');
+                    break;  % Exit the visual servoing loop if the error is below the minimum threshold
+                end
+                
+                % compute the velocity of camera in camera frame
+                try
+                    v = lambda * pinv(J) * error;
+                catch
+                    status = -1; 
+                    return
+                end
+                fprintf('v: %.3f %.3f %.3f %.3f %.3f %.3f\n', v);
+        
+                J_robot = robot.env.tm5700.model.jacobe(q0);
+                J_robotInv = pinv(J_robot);
+        
+                % Calculate joint velocities
+                qp = J_robotInv * v;
+                % Limit joint velocities
+                qp = max(min(qp, pi), -pi);
+                % Update joint angles
+                q = q0 + (1 / fps) * qp;
+                robot.env.tm5700.model.animate(q');  % Animate the robot
+                % Update camera pose
+                Tc = robot.env.tm5700.model.fkine(q);
+                %camera.T = Tc.T * cameraOffset;
+                camera.T = Tc.T;
+
+                % Pause to match the frame rate
+                pause(1 / fps);
+        
+                % Stop the loop after a fixed number of steps
+                if steps > 200
+                    break;
+                end
+        
+                % Update the joint configuration for the next iteration
+                q0 = q;
+            end
         end
 
         function animateTM5WithWaypoints(robot, qWaypoints, numSteps, eStop)
@@ -557,9 +697,6 @@ classdef robotControl
                 
                 drawnow();
             end
-        end
-            
-            
         end
         
         function checkPause(~, eStop)

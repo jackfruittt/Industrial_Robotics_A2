@@ -2,20 +2,29 @@ clc; clf;
 grid on; hold on;
 axis([-4.5 4.5 -3.5 3.5 0 3.5]);
 
-view(90, 10);
+view(120, 40);
 
 eStop = serial('COM3', 'BaudRate', 9600); 
 env = EnvironmentLoader();
 
-gripperLeftState = 'closed';
-gripperRightState = 'closed';
+%gripperLeftState = 'closed';
+%gripperRightState = 'closed';
 robot = robotControl(env);
 view(90, 10); 
 
-deltaTime = 0.05;
+deltaTime = 10.05;
 steps = 50;
 lamda = 0.01;
 epsilon = 0.1;
+
+robot.env.tm5700.model.teach();
+
+T1 = [eye(3), [1.000, 0.565, 1.672]'; zeros(1, 3), 1]
+T2 = [eye(3), [1.122, 0.401, 1.034]'; zeros(1, 3), 1]
+
+robot.animateTM5RMRC(T1, T2, steps, deltaTime, lamda, epsilon, eStop)
+
+%{
 waypoints = 5;
 
 robot.env.pr2LeftArm.model.teach();
@@ -55,3 +64,5 @@ end
 % robot.movePR2ArmsRMRC(leftT2, leftT1, rightT2, rightT1, steps, deltaTime, lambda, epsilon, eStop);
 % robot.movePR2ArmsRMRC(leftT1, leftT2, rightT1, rightT2, steps, deltaTime, lambda, epsilon, eStop);
 % robot.movePR2ArmsRMRC(leftT2, leftT1, rightT2, rightT1, steps, deltaTime, lambda, epsilon, eStop);
+%}
+
