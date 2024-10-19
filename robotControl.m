@@ -92,12 +92,12 @@ classdef robotControl
                 robot.env.pr2LeftArm.model.animate(qPrel(i, :));
                 
                 T_leftEndEffector = robot.env.pr2LeftArm.model.fkine(qPrel(i, :)).T;
-                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T;
+                tRightEndEffector = robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T;
                 
                 robot.env.gripperl1.model.base = T_leftEndEffector  * offset;
                 robot.env.gripperr1.model.base = T_leftEndEffector * offset;
-                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
-                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                robot.env.gripperr2.model.base = tRightEndEffector * offset;
                 
                 % Animate grippers based on their current state
                 robot.animatePR2Grippers(robot.env.gripperl1, robot.env.gripperr1, PR2GripperLeftState);
@@ -149,10 +149,10 @@ classdef robotControl
                 
                 robot.env.pr2RightArm.model.animate(qPrer(i, :));
                 
-                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T;
+                tRightEndEffector = robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T;
                 
-                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
-                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                robot.env.gripperr2.model.base = tRightEndEffector * offset;
                 
                 robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 
@@ -163,7 +163,7 @@ classdef robotControl
         function animateRightPR2ArmsAndGrippersWithKnife(robot, rightStartPos, rightEndPos, numSteps, eStop)
             global PR2GripperRightStateKnife;
             
-            gripperOffset = troty(-pi/2) * transl(0.05, 0, 0); 
+            offset = troty(-pi/2) * transl(0.05, 0, 0); 
             
             q1 = robot.env.pr2RightArm.model.ikcon(rightStartPos);
             q2 = robot.env.pr2RightArm.model.ikcon(rightEndPos);
@@ -184,8 +184,8 @@ classdef robotControl
                 
                 tRightEndEffector = robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T;
         
-                robot.env.gripperl2.model.base = tRightEndEffector * gripperOffset;
-                robot.env.gripperr2.model.base = tRightEndEffector * gripperOffset;
+                robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                robot.env.gripperr2.model.base = tRightEndEffector * offset;
                 robot.env.pr2KnifeArm.attachToEndEffector(robot.env.pr2RightArm.model.fkine(qPrer(i, :)).T);
         
                 robot.animatePR2GripperRightKnife(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightStateKnife);
@@ -194,11 +194,11 @@ classdef robotControl
             end
         end
 
-        function hybridPR2RightArmControl(robot, rightStartTr, rightEndTr, steps, deltaTime, lambda, epsilon, eStop)
+        function animatepr2RightHybridControl(robot, rightStartTr, rightEndTr, steps, deltaTime, lambda, epsilon, eStop)
 
             global PR2GripperRightStateKnife;
             
-            gripperOffset = troty(-pi/2) * transl(0.05, 0, 0);
+            offset = troty(-pi/2) * transl(0.05, 0, 0);
             
             qStartRight = robot.env.pr2RightArm.model.ikcon(rightStartTr);
             
@@ -228,8 +228,14 @@ classdef robotControl
                 end
         
                 % Check if RMRC can continue or fallback to IK based on joint velocity
-                if any(abs(qRightDot) > 2)  % If joint velocity is too high or unstable
-                    disp('Switching to IK due to high joint velocities or instability...');
+                %if any(abs(qRightDot) > 2)  % If joint velocity is too high or unstable
+                
+                % Compute Yoshikawa's manipulability measure
+                manipulability = sqrt(det(jRight * jRight'));
+
+                %Combine YMM with singularity handling 
+                if manipulability < epsilon ||  any(abs(qRightDot) > 2)
+                    disp('Switching to IK due to low manipulability, singularities or instability');
                     % Use IK to compute the next joint configuration
                     qMatrixRight(i+1,:) = robot.env.pr2RightArm.model.ikcon(rightArmCTraj(:,:,i+1));
                 else
@@ -244,11 +250,11 @@ classdef robotControl
 
                 robot.env.pr2RightArm.model.animate(qMatrixRight(i,:));
 
-                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i,:)).T;
+                tRightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i,:)).T;
         
-                robot.env.gripperl2.model.base = T_rightEndEffector * gripperOffset;
-                robot.env.gripperr2.model.base = T_rightEndEffector * gripperOffset;
-                robot.env.pr2KnifeArm.attachToEndEffector(T_rightEndEffector);
+                robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                robot.env.gripperr2.model.base = tRightEndEffector * offset;
+                robot.env.pr2KnifeArm.attachToEndEffector(tRightEndEffector);
         
                 robot.animatePR2GripperRightKnife(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightStateKnife);
                 drawnow();
@@ -279,10 +285,10 @@ classdef robotControl
                 
                 robot.env.pr2RightArm.model.animate(qMatrix(i, :));
                 
-                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrix(i, :)).T;
+                tRightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrix(i, :)).T;
                 
-                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
-                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                robot.env.gripperr2.model.base = tRightEndEffector * offset;
                 
                 robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 
@@ -313,10 +319,10 @@ classdef robotControl
                 
                 robot.env.pr2LeftArm.model.animate(qMatrix(i, :));
                 
-                T_rightEndEffector = robot.env.pr2LeftArm.model.fkine(qMatrix(i, :)).T;
+                tRightEndEffector = robot.env.pr2LeftArm.model.fkine(qMatrix(i, :)).T;
                 
-                robot.env.gripperl1.model.base = T_rightEndEffector * offset;
-                robot.env.gripperr1.model.base = T_rightEndEffector * offset;
+                robot.env.gripperl1.model.base = tRightEndEffector * offset;
+                robot.env.gripperr1.model.base = tRightEndEffector * offset;
                 
                 robot.animatePR2Grippers(robot.env.gripperl1, robot.env.gripperr1, PR2GripperLeftState);
                 
@@ -386,10 +392,10 @@ classdef robotControl
                 robot.checkPause(eStop);
                 robot.env.pr2LeftArm.model.animate(qMatrixLeft(i,:));
                 robot.env.pr2RightArm.model.animate(qMatrixRight(i,:));
-                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T;
+                tRightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T;
                 
-                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
-                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                robot.env.gripperr2.model.base = tRightEndEffector * offset;
                 
                 robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 drawnow();
@@ -444,15 +450,72 @@ classdef robotControl
             for i = 1:steps
                 robot.checkPause(eStop);
                 robot.env.pr2RightArm.model.animate(qMatrixRight(i,:));
-                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T;
+                tRightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T;
                 
-                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
-                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                robot.env.gripperr2.model.base = tRightEndEffector * offset;
+                robot.env.pr2KnifeArm.attachToEndEffector(robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T);
                 robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 drawnow();
             end
 
         end
+
+        function animatepr2RightRMRCNullSpace(robot, rightStartTr, rightEndTr, steps, deltaTime, lambda, epsilon, secondaryTaskWeight)
+            global  PR2GripperRightStateKnife;
+            offset = troty(-pi/2) * transl(0.05, 0, 0);
+            
+            qRight = robot.env.pr2RightArm.model.ikcon(rightStartTr);
+            qMatrixRight = zeros(steps, length(qRight)); 
+            qMatrixRight(1,:) = qRight;
+        
+            T_rightCTraj = ctraj(rightStartTr, rightEndTr, steps);
+        
+            for i = 1:steps-1
+              
+                qRight = qMatrixRight(i, :);
+                T_current = robot.env.pr2RightArm.model.fkine(qRight).T;
+        
+                % Compute Cartesian velocity
+                vRight = tr2delta(T_current, T_rightCTraj(:,:,i+1)) / deltaTime;
+        
+                % Compute the Jacobian at the current joint configuration
+                J = robot.env.pr2RightArm.model.jacob0(qRight);
+        
+                % Compute the primary task joint velocities using Damped Least Squares (DLS)
+                if abs(det(J * J')) < epsilon
+                    J_pseudoInverse = (J' / (J * J' + lambda^2 * eye(6)));  % DLS pseudo-inverse
+                else
+                    J_pseudoInverse = pinv(J);  
+                end
+        
+                qDot_primary = J_pseudoInverse * vRight;
+        
+                % Define the secondary task (e.g., posture control, joint limit avoidance)
+                q_preferred = [0 -pi/2 0 0 0 0 0]; 
+                z = secondaryTaskWeight * (q_preferred - qRight)';
+        
+                % Null-space projection to resolve redundancy
+                qDot_secondary = (eye(size(J, 2)) - J_pseudoInverse * J) * z;
+        
+                % Combine primary and secondary tasks
+                qDot = qDot_primary + qDot_secondary;
+        
+                qMatrixRight(i+1, :) = qRight + qDot' * deltaTime;
+            end
+        
+            for i = 1:steps
+                robot.env.pr2RightArm.model.animate(qMatrixRight(i,:));
+                tRightEndEffector = robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T;
+                
+                robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                robot.env.gripperr2.model.base = tRightEndEffector * offset;
+                robot.env.pr2KnifeArm.attachToEndEffector(robot.env.pr2RightArm.model.fkine(qMatrixRight(i, :)).T);
+                robot.animatePR2GripperRightKnife(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightStateKnife);
+                drawnow();
+            end
+        end
+        
 
         function animatePR2SingleRightJoint(robot, jointToMove, targetAngleDeg, steps)
             global PR2GripperRightState;
@@ -466,9 +529,9 @@ classdef robotControl
             for i = 1:length(angles)
                 qTarget(jointToMove) = angles(i);  
                 robot.env.pr2RightArm.model.animate(qTarget);  
-                T_rightEndEffector = robot.env.pr2RightArm.model.fkine(qTarget).T;
-                robot.env.gripperl2.model.base = T_rightEndEffector * offset;
-                robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                tRightEndEffector = robot.env.pr2RightArm.model.fkine(qTarget).T;
+                robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                robot.env.gripperr2.model.base = tRightEndEffector * offset;
                 robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 drawnow();  
             end
@@ -688,13 +751,13 @@ classdef robotControl
                 
                 %Build Gripper and Modify later
                 %T_leftEndEffector = robot.env.pr2Left.model.fkine(qPrel(i, :)).T;
-                %T_rightEndEffector = robot.env.pr2Right.model.fkine(qPrer(i, :)).T;
+                %tRightEndEffector = robot.env.pr2Right.model.fkine(qPrer(i, :)).T;
                 
                 %Ditto ^^
                 %robot.env.gripperl1.model.base = T_leftEndEffector  * offset;
                 %robot.env.gripperr1.model.base = T_leftEndEffector * offset;
-                %robot.env.gripperl2.model.base = T_rightEndEffector * offset;
-                %robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                %robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                %robot.env.gripperr2.model.base = tRightEndEffector * offset;
                 
                 % Animate grippers based on their current state
                 %robot.animatePR2Grippers(robot.env.gripperl1, robot.env.gripperr1, PR2GripperLeftState);
@@ -723,10 +786,10 @@ classdef robotControl
                 
                 robot.env.tm5700.model.animate(qMatrix(i, :));
                 
-                %T_rightEndEffector = robot.env.pr2Right.model.fkine(qMatrix(i, :)).T;
+                %tRightEndEffector = robot.env.pr2Right.model.fkine(qMatrix(i, :)).T;
                 
-                %robot.env.gripperl2.model.base = T_rightEndEffector * offset;
-                %robot.env.gripperr2.model.base = T_rightEndEffector * offset;
+                %robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                %robot.env.gripperr2.model.base = tRightEndEffector * offset;
                 
                 %robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
                 

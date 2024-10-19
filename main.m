@@ -127,7 +127,12 @@ deletePlyObject(fakeKnife);
 robot.animateRightPR2ArmsAndGrippersWithKnife(pr2RightPos2, pr2RightPos1h, numSteps, eStop);
 robot.animateRightPR2ArmsAndGrippersWithKnife(pr2RightPos1h, bananaRTr, numSteps, eStop);
 robot.animateRightPR2ArmsAndGrippersWithKnife(bananaRTr, pr2RightPos3, numSteps, eStop);
-robot.hybridPR2RightArmControl(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, eStop);
+robot.animatePR2RightArmRMRC(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, eStop);
+robot.animatePR2RightArmRMRC(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
+robot.animatepr2RightHybridControl(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, eStop);
+robot.animatepr2RightHybridControl(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
+robot.animatepr2RightRMRCNullSpace(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, 0.4);
+robot.animatepr2RightRMRCNullSpace(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, 0.4);
 %robot.animatePR2SingleRightJoint(1, -10, 30);
 %robot.animatePR2SingleRightJoint(6, -45, 30);
 
