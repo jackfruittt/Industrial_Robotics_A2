@@ -2,7 +2,7 @@
 clc; clf;
 
 grid on; hold on;
-axis([-4.5 4.5 -3.5 3.5 0 3.5]);
+axis([-1.8 3.5 -2.5 2.5 0 2.5]);
 
 view(120, 40);
 
@@ -17,6 +17,11 @@ view(75, 25);
 pStar = [262 762 762 262;  % uTL, uTR, uBL, uBR
          762 762 262 262];  % vTL, vTR, vBL, vBR
 
+%    P4    P3   P2    P1
+P1 = [0.9 , 1.1, 1.1, 0.9; ... X
+      0.4, 0.4, 0.6, 0.6; ... Y
+      0.82, 0.82, 0.82, 0.82]; ... Z
+
 %pStar = [100 500 500 100;  % uTL, uTR, uBL, uBR
 %        500 500 100 100];  % vTL, vTR, vBL, vBR
 
@@ -29,26 +34,29 @@ pStar = [262 762 762 262;  % uTL, uTR, uBL, uBR
 %     0.5, 0.5, 0.6, 0.6;
 %     0.82, 0.82, 0.82, 0.82];
 
-%    P4    P3   P2    P1
-P = [0.9 , 1.1, 1.1, 0.9; ... X
-     0.4, 0.4, 0.6, 0.6; ... Y
-     0.82, 0.82, 0.82, 0.82]; ... Z
+
 
 %P2 = [0.9 , 1.1, 1.1, 0.9; ... X
 %     -0.2, -0.2, 0.2, 0.2; ... Y
 %     0.82, 0.82, 0.82, 0.82]; ... Z
 
+%robot.env.tm5700.model.teach(zeros(1,6));
+
+%pause
 
 fps = 25;
 lambda = 1;
 cameraOffset = transl(0,0.075,0.05);
-%q0 = [0.9*pi; -pi/3; pi/3; pi/6; -pi/2; 0];
+deltaTime = 0.05;
+steps = 50;
+epsilon = 0.1;
+
 q0 = [pi/2; pi/8; -pi/2; 0; -pi/2; 0];
 
 camera = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
          'resolution', [1024 1024], 'centre', [512 512], 'name', 'TM5-Camera');
 
-robot.TM5700_IBVS(q0, camera, pStar, P, fps, lambda, eStop)
+robot.animateTM5IBVS(q0, camera, pStar, P1, fps, lambda, eStop)
 
 function TM5700_IBVS(robot, q0, camera, cameraOffset, pStar, P, fps, lambda)
     robotTr = robot.env.tm5700.model.fkine(q0).T;
@@ -150,154 +158,30 @@ function TM5700_IBVS(robot, q0, camera, cameraOffset, pStar, P, fps, lambda)
 end
 
 currentQ = robot.env.tm5700.model.getpos();
-disp(currentQ)
-
-robot.env.tm5700.model.teach(currentQ);
+%robot.env.tm5700.model.teach(currentQ);
 
 T1 = robot.env.tm5700.model.fkine(currentQ)
-T2 = T1.T * transl(0, 0, 0.24)
-T2 = SE3(T2)
+T1 = T1.T
+
+T1Rot = T1(1:3,1:3);
+T1P = T1(1:3,4);
+T2 = [T1Rot, [T1P(1), T1P(2), T1P(3)-0.2]'; zeros(1, 3), 1];
+
+robot.animateTM5RMRC(currentQ, T1, T2, steps, deltaTime, epsilon, eStop);
+currentQ = robot.env.tm5700.model.getpos();
+robot.animateTM5RMRC(currentQ, T2, T1, steps, deltaTime, epsilon, eStop);
+
+currentQ = robot.env.tm5700.model.getpos();
+T3 = [T1Rot, [T1P(1), T1P(2)-0.5, T1P(3)-0.14]'; zeros(1, 3), 1];
+robot.animateTM5RMRC(currentQ, T1, T3, steps, deltaTime, epsilon, eStop);
 
 
-%T1 = SE3([1.000, 0.5, 1.140]) * SE3.Rx(0.0001) * SE3.Ry(-0.0004) * SE3.Rz(0.0056);
-%T2 = SE3([1.000, 0.5, 0.900]) * SE3.Rx(0.0001) * SE3.Ry(-0.0004) * SE3.Rz(0.0056);
+%%
+% Plot data notes below:
 
-
-%T1 = [eye(3), [1.000, 0.5, 1.140]'; zeros(1, 3), 1];
-%T2 = [eye(3), [1.000, 0.5, 0.9]'; zeros(1, 3), 1];
-
-deltaTime = 0.05;
-steps = 50;
-lamda = 0.01;
-epsilon = 0.1;
-
-robot.animateTM5RMRC(T1, T2, steps, deltaTime, lamda, epsilon, eStop);
-
-
-
-
-% %% Initialize the Robot and Setup
-% robot = TM5.TM5700();  % Initialize TM5-700 Robot
-% 
-% %Set workspace limits for better visualization
-% axis([-1.9 3.5 -2.5 2.5 0 2.3]);
-% 
-% % cameraOffset for TM5700 from endEffector
+% cameraOffset for TM5700 from endEffector
 % cameraOffset = transl(0,0.075,0.05);
-% 
-% % Create target points in the image plane
-% pStar = [262 762 762 262;  % uTL, uTR, uBL, uBR
-%         762 762 262 262];  % vTL, vTR, vBL, vBR
-% 
-% % Create 3D points representing the target object
-% P = [1.2, 1.2, 1.2, 1.2;
-%     -0.25, 0.25, 0.25, -0.25;
-%     1, 1, 0.5, 0.5];
-% 
-% % Initial joint configuration for TM5-700 (6 DOF)
-% q0 = [0.9*pi; -pi/3; pi/3; pi/6; -pi/2; 0];
-% 
-% % Setup the camera
-% cam = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
-%     'resolution', [1024 1024], 'centre', [512 512], 'name', 'TM5-Camera');
-% 
-% % Frame rate
-% fps = 25;
-% 
-% % Controller gain and target depth
-% lambda = 1.6;
-% depth = mean(P(1, :));  % Average depth of the 3D points
-% 
-% %% Initialize Visualization
-% Tc0 = robot.model.fkine(q0).T;  % Initial pose of the robot
-% robot.model.animate(q0');        % Animate to initial pose
-% drawnow;
-% 
-% cam.T = Tc0 * cameraOffset;  % Set the camera pose to match the robot’s end-effector
-% cam.plot_camera('label', 'scale', 0.05, 'frustum', true);  % Plot the camera
-% plot_sphere(P, 0.05, 'b');  % Plot the target points in 3D
-% 
-% input('Press Enter to continue.');
-% 
-% %% Image View Initialization
-% % Project the 3D points to the image plane
-% cam.clf();
-% p = cam.plot(P);  % Initial projection
-% cam.plot(pStar, '*');  % Desired points in the image
-% cam.hold(true);
-% cam.plot(P, 'pose', Tc0, 'o');  % 3D points with camera pose
-% 
-% % Label each point in the image view
-% textHandlesP = gobjects(1, size(p, 2));  % Labels for projected points
-% textHandlesPStar = gobjects(1, size(pStar, 2));  % Labels for desired points
-% 
-% % Label the initial projected points (P)
-% for i = 1:size(p, 2)
-%     textHandlesP(i) = text(p(1, i), p(2, i), sprintf('P%d', i), ...
-%         'Color', 'blue', 'FontSize', 12, 'Parent', gca(cam.figure));
-% end
-% 
-% % Label the desired points (pStar)
-% for i = 1:size(pStar, 2)
-%     textHandlesPStar(i) = text(pStar(1, i), pStar(2, i), sprintf('p^*%d', i), ...
-%         'Color', 'green', 'FontSize', 12, 'Parent', gca(cam.figure));
-% end
-% 
-% pause(2);
-% cam.hold(true);
-% 
-% % Initialize history storage for plotting results
-% history = [];
-% 
-% %% Visual Servoing Control Loop
-% ksteps = 0;
-% 
-% errorThreshold = 10;
-% 
-% while true
-%     ksteps = ksteps + 1;
-%     % Get current image plane projection
-%     uv = cam.plot(P);
-%     % Update labels for the projected points (P)
-%     for i = 1:size(uv, 2)
-%         if isvalid(textHandlesP(i))
-%             delete(textHandlesP(i));  % Delete old label
-%         end
-%         textHandlesP(i) = text(uv(1, i), uv(2, i), sprintf('P%d', i), ...
-%             'Color', 'blue', 'FontSize', 12, 'Parent', gca(cam.figure));
-%     end
-%     % Compute error between desired and current projections
-%     e = pStar - uv;
-%     e = e(:)  % Flatten to a column vector
-%     % Compute the IBVS Jacobian
-%     J = cam.visjac_p(uv, depth);
-%     % Check if the error is within the acceptable range
-%     errorNorm = norm(e)  % Check error magnitude
-%     if errorNorm < errorThreshold
-%         disp('Error within acceptable range. Exiting...');
-%         break;  % Exit the visual servoing loop if the error is below the minimum threshold
-%     end
-%     % Compute camera velocity
-%     try
-%         v = lambda * pinv(J) * e
-%     catch
-%         warning('Singularity detected! Exiting...');
-%         break;
-%     end
-%     % Compute the robot's Jacobian and its inverse
-%     J_robot = robot.model.jacobe(q0);
-%     J_inv = pinv(J_robot);
-%     % Calculate joint velocities
-%     qp = J_inv * v;
-%     % Limit joint velocities
-%     qp = max(min(qp, pi), -pi);
-%     % Update joint angles
-%     q = q0 + (1 / fps) * qp;
-%     robot.model.animate(q');  % Animate the robot
-%     % Update camera pose
-%     Tc = robot.model.fkine(q);
-%     cam.T = Tc.T * cameraOffset;
-% 
+
 %     % Store data for plotting later
 %     hist.uv = uv(:);
 %     hist.vel = v;
@@ -308,19 +192,7 @@ robot.animateTM5RMRC(T1, T2, steps, deltaTime, lamda, epsilon, eStop);
 %     hist.qp = qp;
 %     hist.q = q;
 %     history = [history hist];
-% 
-%     % Pause to match the frame rate
-%     pause(1 / fps);
-% 
-%     % Stop the loop after a fixed number of steps
-%     if ksteps > 200
-%         break;
-%     end
-% 
-%     % Update the joint configuration for the next iteration
-%     q0 = q;
-% end
-% 
+
 % %% 1.5 Plot Results
 % figure();
 % plot_p(history, pStar, cam);
