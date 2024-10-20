@@ -15,17 +15,21 @@ classdef PR2ControlGUI
             % Initialize the environment loader and use its arms
             env = EnvironmentLoader();  % This loads the PR2 environment, including arms
             
-            % Assign the right and left arms from the environment loader
+            % Assign the right and left arms from the environment loade
+            obj.pr2BaseTr = env.pr2Base.model;
             obj.pr2Right = env.pr2RightArm.model;
             obj.pr2Left = env.pr2LeftArm.model;
             
+            qb = [0 0 0];
             q = [0 pi/2 0 0 0 0 0];
             obj.pr2Right.animate(q);
             obj.pr2Left.animate(q);
+            obj.pr2BaseTr.animate(qb);
             
             % Retrieve the joint limits (qlims) for both arms
             qlimR = obj.pr2Right.qlim;  
             qlimL = obj.pr2Left.qlim;   
+            qLimB = obj.pr2BaseTr.qlim;
             
             % Define colors for the UI
             hexColor = '#8F938D';
@@ -116,19 +120,24 @@ classdef PR2ControlGUI
             
             % Create translation control panel for base movement
             translationPanel = uipanel('Title', 'Translation Control', 'FontSize', 12, ...
-                'FontName', 'Arial', ...              
-                'FontWeight', 'bold', ...                
-                'FontAngle', 'normal', ...              
-                'Position', [0.8, 0, 0.9, 0.20], ... 
+                'FontName', 'Arial', ...
+                'FontWeight', 'bold', ...
+                'FontAngle', 'normal', ...
+                'Position', [0.8, 0, 0.9, 0.20], ...
                 'BackgroundColor', rgbColor, ...
                 'BorderType', 'none');
             
-            % Sliders for X, Y, Z translations
+            % Sliders for X, Y, Z translations with corresponding value displays
             uicontrol('Style', 'text', 'Parent', translationPanel, ...
                 'Position', [10, 160, 100, 30], 'String', 'Translate X', 'FontSize', 12);
             obj.translateXSlider = uicontrol('Style', 'slider', 'Parent', translationPanel, ...
                 'Min', -1, 'Max', 1, 'Value', 0, 'Position', [10, 140, 100, 30], ...
                 'Sliderstep', [0.01, 0.1]);
+            
+            % Create a text box to display the value of X slider
+            obj.translateXValueText = uicontrol('Style', 'text', 'Parent', translationPanel, ...
+                'Position', [120, 140, 50, 30], 'String', '0', 'FontSize', 12, ...
+                'BackgroundColor', [1 1 1]);
             
             uicontrol('Style', 'text', 'Parent', translationPanel, ...
                 'Position', [10, 110, 100, 30], 'String', 'Translate Y', 'FontSize', 12);
@@ -136,16 +145,26 @@ classdef PR2ControlGUI
                 'Min', -1, 'Max', 1, 'Value', 0, 'Position', [10, 90, 100, 30], ...
                 'Sliderstep', [0.01, 0.1]);
             
+            % Create a text box to display the value of Y slider
+            obj.translateYValueText = uicontrol('Style', 'text', 'Parent', translationPanel, ...
+                'Position', [120, 90, 50, 30], 'String', '0', 'FontSize', 12, ...
+                'BackgroundColor', [1 1 1]);
+            
             uicontrol('Style', 'text', 'Parent', translationPanel, ...
                 'Position', [10, 60, 100, 30], 'String', 'Translate Z', 'FontSize', 12);
             obj.translateZSlider = uicontrol('Style', 'slider', 'Parent', translationPanel, ...
                 'Min', -1, 'Max', 1, 'Value', 0, 'Position', [10, 40, 100, 30], ...
                 'Sliderstep', [0.01, 0.1]);
             
+            % Create a text box to display the value of Z slider
+            obj.translateZValueText = uicontrol('Style', 'text', 'Parent', translationPanel, ...
+                'Position', [120, 40, 50, 30], 'String', '0', 'FontSize', 12, ...
+                'BackgroundColor', [1 1 1]);
+            
             % Listeners for real-time updates of translation
-            addlistener(obj.translateXSlider, 'Value', 'PreSet', @(src, event) updateTranslation());
-            addlistener(obj.translateYSlider, 'Value', 'PreSet', @(src, event) updateTranslation());
-            addlistener(obj.translateZSlider, 'Value', 'PreSet', @(src, event) updateTranslation());
+            addlistener(obj.translateXSlider, 'Value', 'PostSet', @(src, event) updateTranslation());
+            addlistener(obj.translateYSlider, 'Value', 'PostSet', @(src, event) updateTranslation());
+            addlistener(obj.translateZSlider, 'Value', 'PostSet', @(src, event) updateTranslation());
             
             openFeatureGUI();
             
@@ -177,30 +196,49 @@ classdef PR2ControlGUI
             
             % Function to update translation of the robot
             function updateTranslation()
+                % Get slider values for translation in x, y, z
                 tx = obj.translateXSlider.Value;
                 ty = obj.translateYSlider.Value;
                 tz = obj.translateZSlider.Value;
-                
-                % Adjust for height and orientation of PR2 arms
-                heightAdjustmentRight = transl(0, 0.22, -0.71);
-                rotationAdjustmentRight = trotx(pi);
-                baseTrRight = transl(tx, ty, tz);
-                
-                heightAdjustmentLeft = transl(0, -0.22, -0.71);
-                rotationAdjustmentLeft = trotx(pi);
-                baseTrLeft = transl(tx, ty, tz);
-                
-                obj.pr2Left.base = baseTrLeft * rotationAdjustmentLeft * heightAdjustmentLeft;
-                obj.pr2Right.base = baseTrRight * rotationAdjustmentRight * heightAdjustmentRight;
-                
-                obj.pr2Left.animate(obj.pr2Left.getpos());
-                obj.pr2Right.animate(obj.pr2Right.getpos());
-                
-                drawnow(); 
-                
-                checkCollision(obj.pr2Left, obj.pr2Left.getpos());
-                checkCollision(obj.pr2Right, obj.pr2Right.getpos());
+
+                set(obj.translateXValueText, 'String', num2str(tx, '%.2f'));
+                set(obj.translateYValueText, 'String', num2str(ty, '%.2f'));
+                set(obj.translateZValueText, 'String', num2str(tz, '%.2f'));
+            
+                % Create translation matrix for the base
+                baseTr = transl(tx, ty, tz);
+            
+                % Adjust for the height and orientation of the PR2 base (if needed)
+                heightAdjustment = transl(0, 0, -0.71);  % Adjust the base's height
+                rotationAdjustment = trotx(pi);          % Adjust the base's orientation
+            
+                % Apply translation and rotation to the base of the robot
+                newBaseTransform = baseTr * rotationAdjustment * heightAdjustment;
+            
+                % Assign the new transformation to the robot base
+                obj.pr2BaseTr.base = newBaseTransform;
+            
+                % Get the current joint positions for both arms
+                qRight = obj.pr2Right.getpos();
+                qLeft = obj.pr2Left.getpos();
+            
+                % Update the base transformation for the arms without recalculating joint angles
+                obj.pr2Right.base = newBaseTransform * transl(0, 0.22, 0.2);  % Right arm offset from base
+                obj.pr2Left.base = newBaseTransform * transl(0, -0.22, 0.2);  % Left arm offset from base
+            
+                % Animate the arms with the existing joint positions (no changes in angles)
+                obj.pr2Right.animate(qRight);  % Right arm moves with the base
+                obj.pr2Left.animate(qLeft);    % Left arm moves with the base
+            
+                % Animate the base model (if applicable)
+                obj.pr2BaseTr.animate(qb);  % Assuming qb contains the base's joint angles
+            
+                drawnow();  % Ensure immediate update of the graphics
             end
+            
+            
+            
+            
             
             % Update function for right arm with collision checking
             function updateRobotRight(index)
