@@ -150,7 +150,7 @@ steps = 50;                   % Number of steps
 lambda = 0.01;                % Damping factor for singularity handling
 epsilon = 0.00000001;             % Threshold for detecting singularities
 
-theta = deg2rad(0);  
+theta = deg2rad(-60);  
 
 % rotation matrix 
 Ry = [cos(theta), 0, sin(theta); 
@@ -160,18 +160,13 @@ Ry = [cos(theta), 0, sin(theta);
 % Define T1 and T2 positions (without rotation)
 T1Pos = [eye(3), [0.241, -0.180, -0.198]'; zeros(1, 3), 1];  % Initial position
 T2Pos = [eye(3), [0.241, -0.180, -0.427]'; zeros(1, 3), 1];  % Final position
-pr2RightPos2 = transl(0.4, -0.6, 0.87);
-%pr2leftPos2 = transl(0.250, 1.001, 1.125);
-%RMRC Positions
-%T1Pos = [eye(3), [0.241, -0.180, -0.198]'; zeros(1, 3), 1];  % Initial position
-pr2PosRMRC1 = [eye(3), [0.57, -0.6, -0.87]'; zeros(1, 3), 1];  % Final position
 
 % Apply the 65-degree rotation about the local Y-axis to the orientation part
-T1Rot = pr2RightPos2;  % Copy T1
-T1Rot(1:3, 1:3) = Ry * pr2RightPos2(1:3, 1:3);  % Apply the rotation to T1
+T1Rot = T1Pos;  % Copy T1
+T1Rot(1:3, 1:3) = Ry * T1Pos(1:3, 1:3);  % Apply the rotation to T1
 
-T2Rot = pr2PosRMRC1;  % Copy T2
-T2Rot(1:3, 1:3) = Ry * pr2PosRMRC1(1:3, 1:3);  % Apply the rotation to T2
+T2Rot = T2Pos;  % Copy T2
+T2Rot(1:3, 1:3) = Ry * T2Pos(1:3, 1:3);  % Apply the rotation to T2
 
 % Move from T1 to T2
 movePR2Arm(pr2Left, T1Rot, T2Rot, steps, dt, lambda, epsilon);
@@ -245,3 +240,4 @@ function movePR2Arm(pr2Left, Tstart, Tend, steps, dt, lambda, epsilon)
         drawnow();
     end
 end
+

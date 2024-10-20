@@ -33,7 +33,7 @@ classdef EnvironmentLoader
         function obj = EnvironmentLoader() % Constructor to initialize the environment
             %
             obj.loadCustomObjects();
-            compEnv = 0;
+            compEnv = 1;
             if compEnv
                 % Make tm5900, edit base position if required
                 obj.tm5700 = TM5.TM5700(transl(1.0,0.8,0.78));

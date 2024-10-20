@@ -1,4 +1,3 @@
-%Curently to load UI, in MATLAB CL run PR2ControlGUI.openGUI();
 classdef PR2ControlGUI
     methods(Static)
         
@@ -13,22 +12,27 @@ classdef PR2ControlGUI
             numJointsR = 7;
             numJointsL = 7;
             
-            obj.pr2Left = PR2.PR2Left();
-            obj.pr2Right = PR2.PR2Right();
+            % Initialize the environment loader and use its arms
+            env = EnvironmentLoader();  % This loads the PR2 environment, including arms
+            
+            % Assign the right and left arms from the environment loader
+            obj.pr2Right = env.pr2RightArm.model;
+            obj.pr2Left = env.pr2LeftArm.model;
+            
             q = [0 pi/2 0 0 0 0 0];
-            obj.pr2Right.model.animate(q);
-            obj.pr2Left.model.animate(q);
+            obj.pr2Right.animate(q);
+            obj.pr2Left.animate(q);
             
             % Retrieve the joint limits (qlims) for both arms
-            qlimR = obj.pr2Right.model.qlim;  
-            qlimL = obj.pr2Left.model.qlim;   
+            qlimR = obj.pr2Right.qlim;  
+            qlimL = obj.pr2Left.qlim;   
             
-            % Define colors
+            % Define colors for the UI
             hexColor = '#8F938D';
             rgbColor = hex2rgb(hexColor);
             textColor = hex2rgb('#000000');
             
-            % Cube
+            % Cube for visual reference in the environment
             centerpnt = [1.2, 0, -0.25];
             side = 1.5;
             plotOptions.plotFaces = true;
@@ -46,7 +50,6 @@ classdef PR2ControlGUI
                 'BorderType', 'none');
             
             for i = 1:numJointsL
-
                 uicontrol('Style', 'text', 'Parent', sliderPanelL, ...
                     'FontSize', 12, ...
                     'FontWeight', 'bold', ...
@@ -111,10 +114,10 @@ classdef PR2ControlGUI
                     'ForegroundColor', [0 0 0]);
             end
             
+            % Create translation control panel for base movement
             translationPanel = uipanel('Title', 'Translation Control', 'FontSize', 12, ...
-                'FontSize', 12, ...                  
                 'FontName', 'Arial', ...              
-                'FontWeight', 'bold', ...               
+                'FontWeight', 'bold', ...                
                 'FontAngle', 'normal', ...              
                 'Position', [0.8, 0, 0.9, 0.20], ... 
                 'BackgroundColor', rgbColor, ...
@@ -139,7 +142,7 @@ classdef PR2ControlGUI
                 'Min', -1, 'Max', 1, 'Value', 0, 'Position', [10, 40, 100, 30], ...
                 'Sliderstep', [0.01, 0.1]);
             
-            % Listeners for real-time updates
+            % Listeners for real-time updates of translation
             addlistener(obj.translateXSlider, 'Value', 'PreSet', @(src, event) updateTranslation());
             addlistener(obj.translateYSlider, 'Value', 'PreSet', @(src, event) updateTranslation());
             addlistener(obj.translateZSlider, 'Value', 'PreSet', @(src, event) updateTranslation());
@@ -148,7 +151,6 @@ classdef PR2ControlGUI
             
             % Function to open the secondary features window
             function openFeatureGUI()
- 
                 fig2 = figure('Name', 'PR2 Features', 'NumberTitle', 'off', ...
                     'Position', [100, 100, 600, 300]); 
                 
@@ -173,13 +175,13 @@ classdef PR2ControlGUI
                     'HorizontalAlignment', 'left');
             end
             
-            % Function to update translation of pr2
+            % Function to update translation of the robot
             function updateTranslation()
-
                 tx = obj.translateXSlider.Value;
                 ty = obj.translateYSlider.Value;
                 tz = obj.translateZSlider.Value;
                 
+                % Adjust for height and orientation of PR2 arms
                 heightAdjustmentRight = transl(0, 0.22, -0.71);
                 rotationAdjustmentRight = trotx(pi);
                 baseTrRight = transl(tx, ty, tz);
@@ -188,16 +190,16 @@ classdef PR2ControlGUI
                 rotationAdjustmentLeft = trotx(pi);
                 baseTrLeft = transl(tx, ty, tz);
                 
-                obj.pr2Left.model.base = baseTrLeft * rotationAdjustmentLeft * heightAdjustmentLeft;
-                obj.pr2Right.model.base = baseTrRight * rotationAdjustmentRight * heightAdjustmentRight;
+                obj.pr2Left.base = baseTrLeft * rotationAdjustmentLeft * heightAdjustmentLeft;
+                obj.pr2Right.base = baseTrRight * rotationAdjustmentRight * heightAdjustmentRight;
                 
-                obj.pr2Left.model.animate(obj.pr2Left.model.getpos());
-                obj.pr2Right.model.animate(obj.pr2Right.model.getpos());
+                obj.pr2Left.animate(obj.pr2Left.getpos());
+                obj.pr2Right.animate(obj.pr2Right.getpos());
                 
                 drawnow(); 
                 
-                checkCollision(obj.pr2Left.model, obj.pr2Left.model.getpos());
-                checkCollision(obj.pr2Right.model, obj.pr2Right.model.getpos());
+                checkCollision(obj.pr2Left, obj.pr2Left.getpos());
+                checkCollision(obj.pr2Right, obj.pr2Right.getpos());
             end
             
             % Update function for right arm with collision checking
@@ -206,11 +208,9 @@ classdef PR2ControlGUI
                 for j = 1:numJointsR
                     qRight(j) = obj.rightSliders(j).Value;
                 end
-        
                 set(obj.rightSliderValueText(index), 'String', num2str(qRight(index), '%.2f'));
-                obj.pr2Right.model.animate(qRight);
-                
-                checkCollision(obj.pr2Right.model, qRight);
+                obj.pr2Right.animate(qRight);
+                checkCollision(obj.pr2Right, qRight);
             end
             
             % Update function for left arm with collision checking
@@ -220,43 +220,35 @@ classdef PR2ControlGUI
                     qLeft(j) = obj.leftSliders(j).Value;
                 end
                 set(obj.leftSliderValueText(index), 'String', num2str(qLeft(index), '%.2f'));
-                obj.pr2Left.model.animate(qLeft);
-                
-                checkCollision(obj.pr2Left.model, qLeft);
+                obj.pr2Left.animate(qLeft);
+                checkCollision(obj.pr2Left, qLeft);
             end
             
-            % Function to extract Right Qmat
+            % Function to extract Right Q-matrix
             function extractQRight(~)
-               
                 qRight = zeros(1, numJointsR);
                 for j = numJointsR:-1:1
                     qRight(j) = round(obj.rightSliders(8 - j).Value, 2); 
                 end
-                
                 qRightReversed = qRight(end:-1:1);
-                
                 qRightStr = mat2str(qRightReversed);
                 set(obj.qRightTextBox, 'String', qRightStr);
             end
             
-            % Function to extract Left Qmat
+            % Function to extract Left Q-matrix
             function extractQLeft(~)
-
                 qLeft = zeros(1, numJointsL);
                 for j = numJointsL:-1:1
                     qLeft(j) = round(obj.leftSliders(8 - j).Value, 2); 
                 end
-                
                 qLeftReversed = qLeft(end:-1:1);
-                
                 qLeftStr = mat2str(qLeftReversed); 
                 set(obj.qLeftTextBox, 'String', qLeftStr);
             end
             
+            % Function to check collisions for a robot given its joint configuration
             function checkCollision(robot, qMatrix)
-       
                 tr = GetLinkPoses(qMatrix, robot);
-             
                 for i = 1:size(tr, 3) - 1
                     for faceIndex = 1:size(faces, 1)
                         vertOnPlane = vertex(faces(faceIndex, 1), :);
@@ -269,7 +261,7 @@ classdef PR2ControlGUI
                 end
             end
             
-  
+            % Function to get the poses of all robot links
             function [transforms] = GetLinkPoses(q, robot)
                 links = robot.links;
                 transforms = zeros(4, 4, length(links) + 1);
@@ -287,30 +279,23 @@ classdef PR2ControlGUI
             function result = IsIntersectionPointInsideTriangle(intersectP, triangleVerts)
                 u = triangleVerts(2, :) - triangleVerts(1, :);
                 v = triangleVerts(3, :) - triangleVerts(1, :);
-                
                 uu = dot(u, u);
                 uv = dot(u, v);
                 vv = dot(v, v);
-                
                 w = intersectP - triangleVerts(1, :);
                 wu = dot(w, u);
                 wv = dot(w, v);
-                
                 D = uv * uv - uu * vv;
-                
-                % Get and test parametric coordinates (s and t)
                 s = (uv * wv - vv * wu) / D;
                 if (s < 0.0 || s > 1.0)
                     result = 0;
                     return;
                 end
-                
                 t = (uv * wu - uu * wv) / D;
                 if (t < 0.0 || (s + t) > 1.0)
                     result = 0;
                     return;
                 end
-                
                 result = 1;
             end
         end
