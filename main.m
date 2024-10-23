@@ -9,6 +9,7 @@ view(90, 10);
 % Load environment
 eStop = serial('COM3', 'BaudRate', 9600);  
 fakeKnife = PlaceObject("plyFiles/Scenery/knife.ply", [0.89, -0.59, 0.86]);
+banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
 env = EnvironmentLoader();
 laser = pr2Laser();
 gripperLeftState = 'closed';

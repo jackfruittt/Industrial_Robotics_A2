@@ -847,8 +847,13 @@ classdef robotControl
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OMRON TM5 FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-        function animateTM5(robot, startPos, endPos, numSteps, eStop)
-            q1 = robot.env.tm5700.model.ikcon(startPos);
+        function animateTM5(robot, currentQ, startPos, endPos, numSteps, eStop)
+            
+            global TM5GripperState;
+            offset = troty(-pi/2) * trotx(-pi/2) * transl(0.01, 0, 0);
+            cameraOffset = transl(0,0.075,0.05);
+            
+            q1 = robot.env.tm5700.model.ikcon(startPos, currentQ);
             q2 = robot.env.tm5700.model.ikcon(endPos);
             
             
@@ -869,6 +874,13 @@ classdef robotControl
                 robot.checkPause(eStop); % Check for pause signal
                 
                 robot.env.tm5700.model.animate(qPrer(i, :));
+                endEffector = robot.env.tm5700.model.fkine(qPrer(i, :));
+                robot.env.tm5700Camera.T = endEffector.T * cameraOffset;
+                robot.env.tm5700GripperL.model.base = endEffector.T * offset;
+                robot.env.tm5700GripperR.model.base = endEffector.T * offset;
+
+                
+                robot.animatePR2Grippers(robot.env.tm5700GripperL, robot.env.tm5700GripperR, TM5GripperState);
                 
                 %Build Gripper and Modify later
                 %T_leftEndEffector = robot.env.pr2Left.model.fkine(qPrel(i, :)).T;
@@ -888,57 +900,261 @@ classdef robotControl
             end
         end
 
-        function animateTM5RMRC(robot, startTr, endTr, steps, deltaTime, lambda, epsilon, eStop)
-            qStart = robot.env.tm5700.model.ikcon(startTr);
-            qEnd = robot.env.tm5700.model.ikcon(endTr);
-
-            qMatrix = zeros(steps, 6);
-            qMatrix(1,:) = qStart;
-
-            cartesianTrajectory = ctraj(startTr, endTr, steps);
-
-            for i = 1:steps-1
-                qMatrix = qMatrix(i, :);
-
-                currentTr = robot.env.tm5700.model.fkine(qMatrix).T;
-
-                cartesianVelocity = tr2delta(currentTr, cartesianTrajectory(:,:,i+1)) / deltaTime;
-
-                jacobian = robot.env.tm5700.model.jacob0(qMatrix);
+        function animateTM5WithBanana(robot, currentQ, startPos, endPos, numSteps, eStop)
+            
+            global TM5GripperState;
+            offset = troty(-pi/2) * trotx(-pi/2) * transl(0.01, 0, 0);
+            cameraOffset = transl(0,0.075,0.05);
+            
+            q1 = robot.env.tm5700.model.ikcon(startPos, currentQ);
+            q2 = robot.env.tm5700.model.ikcon(endPos);
+            
+            % LSPB trajectory for smooth transition
+            sr = lspb(0, 1, numSteps); 
+            
+            qPrer = nan(numSteps, 6);
+            
+            for i = 1:numSteps
+                qPrer(i, :) = (1 - sr(i)) * q1 + sr(i) * q2;
+            end
+            
+            % Plot the motion between poses and animate robot with grippers
+            for i = 1:numSteps
+                robot.checkPause(eStop); % Check for pause signal
                 
-                if abs(det(jacobian * jacobian')) < epsilon
-                    qDot = (jacobian' / (jacobian * jacobian' + lambda^2 * eye(6))) * cartesianVelocity;
-                else
-                    qDot = jacobian \ cartesianVelocity;
-                end
+                robot.env.tm5700.model.animate(qPrer(i, :));
+                endEffector = robot.env.tm5700.model.fkine(qPrer(i, :));
+                robot.env.tm5700Camera.T = endEffector.T * cameraOffset;
+                robot.env.tm5700GripperL.model.base = endEffector.T * offset;
+                robot.env.tm5700GripperR.model.base = endEffector.T * offset;
 
-                qMatrix(i+1,:) = qMatrix + qDot' * deltaTime;
+                robot.env.tm5700Banana.attachToEndEffector(endEffector.T);
+                robot.animatePR2Grippers(robot.env.tm5700GripperL, robot.env.tm5700GripperR, TM5GripperState);
+                
+                
+                drawnow(); % Update the figure
             end
-
-            for i = 1:steps
-                robot.checkPause(eStop);
-                robot.env.tm5700.model.animate(qMatrix(i,:));
-                drawnow();
-            end
-
         end
 
-        function TM5700_IBVS(robot, q0, camera, pStar, P, fps, lambda, eStop)
+        function animateTM5RMRC(robot, qStart, startPos, endPos, numSteps, deltaTime, epsilon, eStop)
+            
+            global TM5GripperState;
+
+            offset = troty(-pi/2) * trotx(-pi/2) * transl(0.01, 0, 0);
+            cameraOffset = transl(0,0.075,0.05);
+
+            W = diag([1 1 1 0 0 0]);            % Weight matrix W for applying linear/angular vel influence
+
+            m = zeros(numSteps, 1);                % Manipulability
+            qMatrix = zeros(numSteps, 6);          % Joint Angles
+            qDot = zeros(numSteps, 6);             % Joint Velocities
+            p = zeros(3, numSteps);                % X Y Z point
+            theta  = zeros(3, numSteps);           % R P Y 
+
+            startPosRot = startPos(1:3,1:3);                                  % Extract Rotation Matrix from T1
+            startPosRPY = tr2rpy(startPosRot,'deg',true,'order','xyz')'; % Get roll pitch yaw using tr2rpy from rotation matrix
+            P1 = startPos(1:3, 4);  % Initial XYZ point from T1
+            P2 = endPos(1:3, 4);  % Final XYZ point from T2                                      
+
+            % Initialise trajectory with initial pose, trapezoidal
+            s = lspb(0, 1, numSteps);
+            for i=1:numSteps
+                p(:, i) = (1 - s(i)) * P1 + s(i) * P2;  % Interpolate XYZ points
+                theta(:, i) = deg2rad(startPosRPY);     % Try to keep orientation the same
+            end
+
+            % Get current q configuration using T1 and qStart
+            qMatrix(1,:) = robot.env.tm5700.model.ikcon(startPos,qStart);
+
+            % RMRC Loop
+            for i = 1:numSteps-1
+                % Get current transform from current q configuration
+                T = robot.env.tm5700.model.fkine(qMatrix(i,:)).T;
+
+                % Get position error
+                pError = p(:,i+1) - T(1:3,4);
+
+                rD = rpy2r(theta(1,i+1),theta(2,i+1),theta(3,i+1)); % R(t+1)
+                rC = T(1:3,1:3);                                    % R(t)
+                skew = ((rD*rC')-eye(3))*(1/deltaTime);             % S(w) = dT^-1*((R(t+1)*R(t)'))-I
+                
+                % Get linear and angular velocities
+                linearVelocity = pError*(1/deltaTime);
+                angularVelocity = [skew(3,2); skew(1,3); skew(2,1)]; % phiDot, thetaDot, psiDot
+                
+                pDot = W * [linearVelocity;angularVelocity];
+
+                % Get robot jacobian from current q configuration
+                J = robot.env.tm5700.model.jacob0(qMatrix(i,:));
+
+                % Check if manipulability is within threshold to adjust lambda value
+                if sqrt(det(J*J')) < epsilon
+                    lambda = (1 - m(i)/epsilon)*5E-2;
+                else
+                    lambda = 0;
+                end
+
+                % Calculate inverse jacobian
+                jInv = inv(J'*J + lambda *eye(6))*J';
+                qDot(i,:) = (jInv*pDot)';
+
+                % Check if calculated q configurations are within lower and upper qlim bounds of tm5700
+                for j = 1:robot.env.tm5700.model.n
+                    if qMatrix(i,j) + deltaTime*qDot(i,j) < robot.env.tm5700.model.qlim(j,1)
+                        qDot(i,j) = 0; % Stop if it exceeds lower bounds
+                    elseif robot.env.tm5700.model.qlim(j,2) < qMatrix(i,j) + deltaTime*qDot(i,j) 
+                        qDot(i,j) = 0; % Stop if it exceeds upper bounds
+                    end
+                end
+
+                % Euler
+                qMatrix(i+1,:) = qMatrix(i,:) + deltaTime*qDot(i,:);
+            end
+            
+            % Animate qMatrix
+            for i=1:numSteps
+                robot.checkPause(eStop)
+                robot.env.tm5700.model.animate(qMatrix(i,:));
+
+                endEffector = robot.env.tm5700.model.fkine(qMatrix(i,:));
+
+                robot.env.tm5700Camera.T = endEffector.T * cameraOffset;
+                robot.env.tm5700GripperL.model.base = endEffector.T * offset;
+                robot.env.tm5700GripperR.model.base = endEffector.T * offset;
+
+                
+                robot.animatePR2Grippers(robot.env.tm5700GripperL, robot.env.tm5700GripperR, TM5GripperState);
+
+                % Include gripper Here 
+
+                drawnow();
+            end
+        end
+
+        function animateTM5WithBananaRMRC(robot, qStart, startPos, endPos, numSteps, deltaTime, epsilon, eStop)
+             
+            global TM5GripperState;
+
+            offset = troty(-pi/2) * trotx(-pi/2) * transl(0.01, 0, 0);
+            cameraOffset = transl(0,0.075,0.05);
+
+            W = diag([1 1 1 0 0 0]);            % Weight matrix W for applying linear/angular vel influence
+
+            m = zeros(numSteps, 1);                % Manipulability
+            qMatrix = zeros(numSteps, 6);          % Joint Angles
+            qDot = zeros(numSteps, 6);             % Joint Velocities
+            p = zeros(3, numSteps);                % X Y Z point
+            theta  = zeros(3, numSteps);           % R P Y 
+
+            startPosRot = startPos(1:3,1:3);                                  % Extract Rotation Matrix from T1
+            startPosRPY = tr2rpy(startPosRot,'deg',true,'order','xyz')'; % Get roll pitch yaw using tr2rpy from rotation matrix
+            P1 = startPos(1:3, 4);  % Initial XYZ point from T1
+            P2 = endPos(1:3, 4);  % Final XYZ point from T2                                      
+
+            % Initialise trajectory with initial pose, trapezoidal
+            s = lspb(0, 1, numSteps);
+            for i=1:numSteps
+                p(:, i) = (1 - s(i)) * P1 + s(i) * P2;  % Interpolate XYZ points
+                theta(:, i) = deg2rad(startPosRPY);     % Try to keep orientation the same
+            end
+
+            % Get current q configuration using T1 and qStart
+            qMatrix(1,:) = robot.env.tm5700.model.ikcon(startPos,qStart);
+
+            % RMRC Loop
+            for i = 1:numSteps-1
+                % Get current transform from current q configuration
+                T = robot.env.tm5700.model.fkine(qMatrix(i,:)).T;
+
+                % Get position error
+                pError = p(:,i+1) - T(1:3,4);
+
+                rD = rpy2r(theta(1,i+1),theta(2,i+1),theta(3,i+1)); % R(t+1)
+                rC = T(1:3,1:3);                                    % R(t)
+                skew = ((rD*rC')-eye(3))*(1/deltaTime);             % S(w) = dT^-1*((R(t+1)*R(t)'))-I
+                
+                % Get linear and angular velocities
+                linearVelocity = pError*(1/deltaTime);
+                angularVelocity = [skew(3,2); skew(1,3); skew(2,1)]; % phiDot, thetaDot, psiDot
+                
+                pDot = W * [linearVelocity;angularVelocity];
+
+                % Get robot jacobian from current q configuration
+                J = robot.env.tm5700.model.jacob0(qMatrix(i,:));
+
+                % Check if manipulability is within threshold to adjust lambda value
+                if sqrt(det(J*J')) < epsilon
+                    lambda = (1 - m(i)/epsilon)*5E-2;
+                else
+                    lambda = 0;
+                end
+
+                % Calculate inverse jacobian
+                jInv = inv(J'*J + lambda *eye(6))*J';
+                qDot(i,:) = (jInv*pDot)';
+
+                % Check if calculated q configurations are within lower and upper qlim bounds of tm5700
+                for j = 1:robot.env.tm5700.model.n
+                    if qMatrix(i,j) + deltaTime*qDot(i,j) < robot.env.tm5700.model.qlim(j,1)
+                        qDot(i,j) = 0; % Stop if it exceeds lower bounds
+                    elseif robot.env.tm5700.model.qlim(j,2) < qMatrix(i,j) + deltaTime*qDot(i,j) 
+                        qDot(i,j) = 0; % Stop if it exceeds upper bounds
+                    end
+                end
+
+                % Euler
+                qMatrix(i+1,:) = qMatrix(i,:) + deltaTime*qDot(i,:);
+            end
+            
+            % Animate qMatrix
+            for i=1:numSteps
+                robot.checkPause(eStop)
+                robot.env.tm5700.model.animate(qMatrix(i,:));
+
+                endEffector = robot.env.tm5700.model.fkine(qMatrix(i,:));
+
+                robot.env.tm5700Camera.T = endEffector.T * cameraOffset;
+                robot.env.tm5700GripperL.model.base = endEffector.T * offset;
+                robot.env.tm5700GripperR.model.base = endEffector.T * offset;
+
+                robot.env.tm5700Banana.attachToEndEffector(endEffector.T);
+                robot.animatePR2Grippers(robot.env.tm5700GripperL, robot.env.tm5700GripperR, TM5GripperState);
+                %robot.animateTM5Banana(banana{1,1}, banana{1,2}, endEffector);
+
+                % Include gripper Here 
+
+                drawnow();
+            end
+        end
+
+        function animateTM5IBVS(robot, q0, pStar, P, fps, lambda, eStop)
+
+            global TM5GripperState;
+
+            offset = troty(-pi/2) * trotx(-pi/2) * transl(0.01, 0, 0);
+            cameraOffset = transl(0,0.075,0.05);
+
             robotTr = robot.env.tm5700.model.fkine(q0).T;
-            robot.env.tm5700.model.animate(q0');
+            robot.env.tm5700.model.animate(q0');                
+
+            robot.env.tm5700GripperL.model.base = robotTr * offset;
+            robot.env.tm5700GripperR.model.base = robotTr * offset;
+
+            robot.animatePR2Grippers(robot.env.tm5700GripperL, robot.env.tm5700GripperR, TM5GripperState);
+
             drawnow;
         
-            %camera.T = robotTr * cameraOffset;
-            camera.T = robotTr;
-            camera.plot_camera('label', 'scale', 0.05, 'frustum', true);
+            %camera.T = robotTr * cameraOffset; % Uncomment to apply offset, edit input param
+            robot.env.tm5700Camera.T = robotTr * cameraOffset;
+            robot.env.tm5700Camera.plot_camera('label', 'scale', 0.05, 'frustum', true);
             plot_sphere(P, 0.03, 'b');
         
             % Project the 3D points to the image plane
-            camera.clf();
-            p = camera.plot(P);  % Initial projection
-            camera.plot(pStar, '*');  % Desired points in the image
-            camera.hold(true);
-            camera.plot(P, 'pose', robotTr, 'o');  % 3D points with camera pose
+            robot.env.tm5700Camera.clf();
+            p = robot.env.tm5700Camera.plot(P);  % Initial projection
+            robot.env.tm5700Camera.plot(pStar, '*');  % Desired points in the image
+            robot.env.tm5700Camera.hold(true);
+            robot.env.tm5700Camera.plot(P, 'pose', robotTr, 'o');  % 3D points with camera pose
             
             % Label each point in the image view
             textHandlesP = gobjects(1, size(p, 2));  % Labels for projected points
@@ -947,47 +1163,50 @@ classdef robotControl
             % Label the initial projected points (P)
             for i = 1:size(p, 2)
                 textHandlesP(i) = text(p(1, i), p(2, i), sprintf('P%d', i), ...
-                    'Color', 'blue', 'FontSize', 12, 'Parent', gca(camera.figure));
+                    'Color', 'blue', 'FontSize', 12, 'Parent', gca(robot.env.tm5700Camera.figure));
             end
             
             % Label the desired points (pStar)
             for i = 1:size(pStar, 2)
                 textHandlesPStar(i) = text(pStar(1, i), pStar(2, i), sprintf('p^*%d', i), ...
-                    'Color', 'green', 'FontSize', 12, 'Parent', gca(camera.figure));
+                    'Color', 'green', 'FontSize', 12, 'Parent', gca(robot.env.tm5700Camera.figure));
             end
         
             pause(2);
-            camera.hold(true);
+            robot.env.tm5700Camera.hold(true);
             
             % Initialize history storage for plotting results
             history = [];
             steps = 0;
-            errorThreshold = 10;
+            errorThreshold = [10, 1000];
             depth = mean(P(1, :));
 
-            %pause(100)
+            pause(5)
         
             while true
                 robot.checkPause(eStop);
                 steps = steps + 1;
-                uv = camera.plot(P);
+                uv = robot.env.tm5700Camera.plot(P);
                 for i = 1:size(uv, 2)
                     if isvalid(textHandlesP(i))
                         delete(textHandlesP(i));  % Delete old label
                     end
                     textHandlesP(i) = text(uv(1, i), uv(2, i), sprintf('P%d', i), ...
-                                     'Color', 'blue', 'FontSize', 12, 'Parent', gca(camera.figure));
+                                     'Color', 'blue', 'FontSize', 12, 'Parent', gca(robot.env.tm5700Camera.figure));
                 end
         
                 error = pStar - uv;
                 error = error(:);
-                J = camera.visjac_p(uv, depth);
+                J = robot.env.tm5700Camera.visjac_p(uv, depth);
         
                 % Check if the error is within the acceptable range
                 errorNorm = norm(error)  % Check error magnitude
-                if errorNorm < errorThreshold
+                if errorNorm < errorThreshold (1)
                     disp('Error within acceptable range. Exiting...');
                     break;  % Exit the visual servoing loop if the error is below the minimum threshold
+                elseif errorThreshold(2) < errorNorm  
+                    disp('Error too large. Exiting...');
+                    break;
                 end
                 
                 % compute the velocity of camera in camera frame
@@ -1011,8 +1230,15 @@ classdef robotControl
                 robot.env.tm5700.model.animate(q');  % Animate the robot
                 % Update camera pose
                 Tc = robot.env.tm5700.model.fkine(q);
-                %camera.T = Tc.T * cameraOffset;
-                camera.T = Tc.T;
+                robot.env.tm5700Camera.T = Tc.T * cameraOffset;
+                %robot.env.tm5700Camera.T = Tc.T;
+
+                robot.env.tm5700GripperL.model.base = Tc.T * offset;
+                robot.env.tm5700GripperR.model.base = Tc.T * offset;
+
+                robot.animatePR2Grippers(robot.env.tm5700GripperL, robot.env.tm5700GripperR, TM5GripperState);
+
+                % Include gripper here
 
                 % Pause to match the frame rate
                 pause(1 / fps);
@@ -1056,6 +1282,17 @@ classdef robotControl
                 
                 drawnow();
             end
+        end
+
+        function animateTM5Banana(robot, banana_h, bananaVertices, tr)
+            tr
+            trRot = tr(1:3,1:3);
+            trPos = tr(1:3,4);
+            transformedBananaVertices = [trRot * bananaVertices(:,1:3)' + trPos * [1,0.8,0.78]]' %* transl(1.0,0.8,0.78)'
+            set(banana_h, 'Vertices', transformedBananaVertices)
+            %transformedBananaVertices = [bananaVertices, ones(size(bananaVertices,1),1)] * tr'
+            %set(banana_h, 'Vertices', transformedBananaVertices(:,1:3))
+            drawnow();
         end
         
         function checkPause(~, eStop)
