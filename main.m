@@ -100,10 +100,11 @@ fprintf('Last Coordinate: (%.2f, %.2f, %.2f)\n', lastCoord(1), lastCoord(2), las
 %Create T-matrices for the banana start and end
 bananaR = [eye(3), [firstCoord(1); firstCoord(2); firstCoord(3)]; zeros(1, 3), 1];
 bananaRTr = bananaR * transl(0, 0, 1);
+bananaRTr1 = bananaR * transl(-0.2, 0, 0.3) * troty(pi/2);
 bananaL = transl(lastCoord) * transl(-0.2, 0, 0) * troty(pi/2);
 
 pr2RightPos3 = [eye(3), [1.071; -0.180; 1.125]; zeros(1, 3), 1];
-pr2RightPos4 = [eye(3), [0.980; -0.180; 1.125]; zeros(1, 3), 1];
+pr2RightPos4 = [eye(3), [0.875; -0.180; 1.125]; zeros(1, 3), 1];
 %Animating moves the left arm to the left end of the banana but in an undesirable position, use waypoint animations
 pr2LeftWayPosStart = env.pr2LeftArm.model.ikcon(pr2LeftPos1);
 %W1 
@@ -141,12 +142,24 @@ deletePlyObject(fakeKnife);
 robot.animateRightPR2ArmsAndGrippersWithKnife(pr2RightPos2, pr2RightPos1h, numSteps, eStop);
 robot.animateRightPR2ArmsAndGrippersWithKnife(pr2RightPos1h, bananaRTr, numSteps, eStop);
 robot.animateRightPR2ArmsAndGrippersWithKnife(bananaRTr, pr2RightPos3, numSteps, eStop);
-robot.animatePR2RightArmRMRC(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, eStop);
-robot.animatePR2RightArmRMRC(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
+%robot.animatePR2RightArmRMRC(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, eStop);
+%robot.animatePR2RightArmRMRC(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
 robot.animatepr2RightHybridControl(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, eStop);
-robot.animatepr2RightHybridControl(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
-robot.animatepr2RightRMRCNullSpace(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, 0.4);
-robot.animatepr2RightRMRCNullSpace(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, 0.4);
+currentQ = env.pr2RightArm.model.getpos();
+disp('Current joint values for PR2 right arm:');
+disp(currentQ);
+currentQDeg = rad2deg(currentQ);
+disp(currentQDeg);
+%{
+   -0.3234    1.0360    0.6692    1.4965   -0.7629    0.8827   -2.5361
+
+
+  -18.5268   59.3585   38.3439   85.7431  -43.7101   50.5728 -145.3072
+%}
+q24 = currentQ;
+%robot.animatepr2RightHybridControl(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
+%robot.animatepr2RightRMRCNullSpace(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, 0);
+%robot.animatepr2RightRMRCNullSpace(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, 0.4);
 %robot.animatePR2SingleRightJoint(1, -10, 30);
 %robot.animatePR2SingleRightJoint(6, -45, 30);
 
