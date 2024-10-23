@@ -157,6 +157,8 @@ disp(currentQDeg);
   -18.5268   59.3585   38.3439   85.7431  -43.7101   50.5728 -145.3072
 %}
 q24 = currentQ;
+q25 = [-0.32 1.04 0.44 1.49 -0.77 0.88 -2.55];
+q26 = 
 %robot.animatepr2RightHybridControl(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
 %robot.animatepr2RightRMRCNullSpace(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, 0);
 %robot.animatepr2RightRMRCNullSpace(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, 0.4);
