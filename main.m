@@ -7,7 +7,8 @@ axis([-4.5 4.5 -3.5 3.5 0 3.5]);
 
 view(90, 10);  
 % Load environment
-eStop = serialport('COM3', 'BaudRate', 9600);  
+eStop = serial('COM3', 'BaudRate', 9600);
+banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
 env = EnvironmentLoader();
 laser = pr2Laser();
 gripperLeftState = 'closed';

@@ -24,7 +24,10 @@ classdef EnvironmentLoader
         pr2Left
 
         tm5700
-        tm5700Gripper
+        tm5700GripperL
+        tm5700GripperR
+        tm5700Camera
+        tm5700Banana
 
     end
     
@@ -35,12 +38,19 @@ classdef EnvironmentLoader
             obj.loadCustomObjects();
             compEnv = 1;
             if compEnv
-                % Make tm5900, edit base position if required
+                % Make tm5700, edit base position if required
                 obj.tm5700 = TM5.TM5700(transl(1.0,0.8,0.78));
 
-                % Make tm5900 gripper, same as above
-                obj.tm5700Gripper = TM5.TM5Gripper((obj.tm5700.model.fkine([0 0 0 0 0 0]).T));
+                % Make tm5700 gripper
+                obj.tm5700GripperL = PR2.PR2LeftGripper((obj.tm5700.model.fkine([0 0 0 0 0 0]).T));
+                obj.tm5700GripperR = PR2.PR2RightGripper((obj.tm5700.model.fkine([0 0 0 0 0 0]).T));
+                obj.tm5700Banana = Banana.robotBanana();
                 
+                % Make tm5700 camera for visual servoing
+                obj.tm5700Camera = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
+                                    'resolution', [1024 1024], 'centre', [512 512], 'name', 'TM5-Camera');
+
+
                 % Make pr2Prismatic base + Arms
                 obj.pr2Base = PR2.PR2Base();
                 obj.pr2LeftArm = PR2.PR2LeftArm(obj.pr2Base.model.base.T);
@@ -130,7 +140,7 @@ classdef EnvironmentLoader
             obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0.2, 0, 0], 1, kitchenRotations)
 
             bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
-            obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0, 0.82], 1, bananaRotations)
+            %obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0, 0.82], 1, bananaRotations)
 
             boardRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/cutting_board.ply',[1.0, 0, 0.8], 1, boardRotations)
