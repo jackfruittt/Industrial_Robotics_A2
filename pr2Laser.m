@@ -10,7 +10,7 @@ classdef pr2Laser
             
             % Plot the ellipsoid
             hold on;
-            surf(X, Y, Z, 'FaceAlpha', 0.5, 'EdgeColor', 'none');
+            surf(X, Y, Z, 'FaceAlpha', 0.1, 'EdgeColor', 'none');
             distanceLabel = text(0, 0, 0, 'Distance: ', 'FontSize', 10, 'Color', 'k');
             
             % Define the laser angles and range

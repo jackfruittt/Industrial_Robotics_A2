@@ -21,7 +21,7 @@ classdef PR2ControlGUI
             obj.pr2Left = env.pr2LeftArm.model;
             
             qb = [0 0 0];
-            q = [0 pi/2 0 0 0 0 0];
+            q = [0 2.3 0 0 0 0 0];
             obj.pr2Right.animate(q);
             obj.pr2Left.animate(q);
             obj.pr2BaseTr.animate(qb);
@@ -37,10 +37,10 @@ classdef PR2ControlGUI
             textColor = hex2rgb('#000000');
             
             % Cube for visual reference in the environment
-            centerpnt = [1.2, 0, -0.25];
-            side = 1.5;
+            lower = [0.7, -1.3, 0];
+            upper = [1.45, 1.3, 0.90];
             plotOptions.plotFaces = true;
-            [vertex, faces, faceNormals] = RectangularPrism(centerpnt - side / 2, centerpnt + side / 2, plotOptions);
+            [vertex, faces, faceNormals] = RectangularPrism(lower, upper, plotOptions);
             axis equal;
             camlight;
             
