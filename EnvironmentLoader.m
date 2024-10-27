@@ -29,6 +29,7 @@ classdef EnvironmentLoader
         tm5700Camera
         tm5700Banana
 
+        teensyGamepad
     end
     
     methods
@@ -38,6 +39,9 @@ classdef EnvironmentLoader
             obj.loadCustomObjects();
             compEnv = 1;
             if compEnv
+                % Make teensyGamepad obj for robot control
+                obj.teensyGamepad = vrjoystick(1); % Usually device ID is 1
+
                 % Make tm5700, edit base position if required
                 obj.tm5700 = TM5.TM5700(transl(1.0,0.8,0.78));
 
@@ -139,8 +143,15 @@ classdef EnvironmentLoader
             kitchenRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/ModifiedKitchen_v13.2.ply',[0.2, 0, 0], 1, kitchenRotations)
 
-            bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            %bananaRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             %obj.CustomPlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0, 0.82], 1, bananaRotations)
+
+            orangeRotations = { {0, 'XY'}, {-45, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/orangeFruit.ply',[0.8, 0.42, 0.78], 1.2, orangeRotations)
+
+            appleRotations = { {0, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
+            obj.CustomPlaceObject('plyFiles/Scenery/appleFruit.ply',[1.2, 0.45, 0.78], 0.35, appleRotations)
+
 
             boardRotations = { {90, 'XY'}, {0, 'XZ'}, {0, 'YZ'} };
             obj.CustomPlaceObject('plyFiles/Scenery/cutting_board.ply',[1.0, 0, 0.8], 1, boardRotations)

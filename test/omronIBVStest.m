@@ -3,21 +3,22 @@ clc; clf;
 
 grid on; hold on;
 axis([-1.8 3.5 -2.5 2.5 -1 2.5]);
-axis([-4 4 -4 4 -4 4]);
 
-view(120, 40);
+view(48, 25);
+zoom(1.7)
 
-eStop = serial('COM3', 'BaudRate', 9600); 
+if isempty(eStop)
+    eStop = serialport('COM4', 9600)
+end 
 env = EnvironmentLoader();
 
 %gripperLeftState = 'closed';
 %gripperRightState = 'closed';
-TM5GripperState = 'closed';
+global TM5GripperState;
+TM5GripperState = 'close';
 banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
-bananaVertices = get(banana_h, 'Vertices');
-banana = {banana_h, bananaVertices};
 robot = robotControl(env);
-view(75, 25); 
+%view(75, 25); 
 
 pStar = [262 762 762 262;  % uTL, uTR, uBL, uBR
          762 762 262 262];  % vTL, vTR, vBL, vBR
@@ -50,7 +51,7 @@ P1 = [0.9 , 1.1, 1.1, 0.9; ... X
 %pause
 
 fps = 25;
-lambda = 1;
+lambda = 0.8;
 cameraOffset = transl(0,0.075,0.05);
 deltaTime = 0.05;
 steps = 50;
@@ -61,7 +62,55 @@ q0 = deg2rad([90; 22.5; -105; 0; -90; 0]); % Scanning Pose - Predefined
 camera = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
          'resolution', [1024 1024], 'centre', [512 512], 'name', 'TM5-Camera');
 
-robot.animateTM5IBVS(q0, pStar, P1, fps, lambda, eStop)
+
+robot.animateTM5GripperMotion('close',eStop);
+robot.animateTM5IBVS(q0, pStar, P1, fps, lambda, eStop);
+
+currentQ = robot.env.tm5700.model.getpos(); 
+T1 = robot.env.tm5700.model.fkine(currentQ).T;
+
+% Rotate End Effector by 90d around Z
+T2 = T1 * trotz(pi/2);
+robot.animateTM5(currentQ,T1,T2,steps,eStop);
+
+% Open Gripper Here
+robot.animateTM5GripperMotion('open',eStop);
+
+T3 = [T2(1:3,1:3), [T2(1,4), T2(2,4)-0.08, T2(3,4)-0.26]'; zeros(1, 3), 1];
+
+% Go down to banana
+robot.animateTM5RMRC(currentQ, T2, T3, steps, deltaTime, epsilon, eStop); 
+
+% Close Gripper Here
+robot.animateTM5GripperMotion('close',eStop);
+
+% Delete Banana
+delete(banana_h)
+
+% Go up 
+T4 = [T3(1:3,1:3), [T3(1,4), T3(2,4)+0.08, T3(3,4)+0.26]'; zeros(1, 3), 1];
+robot.animateTM5WithBananaRMRC(currentQ, T3, T4, steps, deltaTime, epsilon, eStop); 
+
+T5 = [T4(1:3,1:3), [T4(1,4), T4(2,4)-0.6, T4(3,4)-0.2]'; zeros(1, 3), 1];
+robot.animateTM5WithBananaRMRC(currentQ, T4, T5, steps, deltaTime, epsilon, eStop);
+
+T5Q = robot.env.tm5700.model.getpos(); 
+T6 = robot.env.tm5700.model.fkine(T5Q).T;
+T7 = T6 * trotz(-pi/2);
+% zeros(1,6) ~ currentQ
+robot.animateTM5WithBanana(currentQ,T6,T7,steps,eStop);
+
+robot.animateTM5GripperMotion('open',eStop);
+
+robot.env.tm5700Banana.model.base = transl(1.0, 0, 0.82)* troty(pi) * trotz(pi/2) * trotx(pi);
+robot.env.tm5700Banana.model.animate(0)
+drawnow();
+
+T7Q = robot.env.tm5700.model.getpos(); 
+T8 = robot.env.tm5700.model.fkine(T7Q).T;
+T9 = robot.env.tm5700.model.fkine(q0).T;
+
+robot.animateTM5(T7Q,T8,T9,steps,eStop);
 
 function TM5700_IBVS(robot, q0, camera, cameraOffset, pStar, P, fps, lambda)
     robotTr = robot.env.tm5700.model.fkine(q0).T;
@@ -162,45 +211,6 @@ function TM5700_IBVS(robot, q0, camera, cameraOffset, pStar, P, fps, lambda)
     end
 end
 
-currentQ = robot.env.tm5700.model.getpos(); 
-T1 = robot.env.tm5700.model.fkine(currentQ).T;
-
-% Rotate End Effector by 90d around Z
-T2 = T1 * trotz(pi/2);
-robot.animateTM5(currentQ,T1,T2,steps,eStop);
-
-% Open Gripper Here
-
-T3 = [T2(1:3,1:3), [T2(1,4), T2(2,4)-0.075, T2(3,4)-0.25]'; zeros(1, 3), 1];
-
-% Go down to banana
-robot.animateTM5RMRC(currentQ, T2, T3, steps, deltaTime, epsilon, eStop); 
-
-% Close Gripper Here
-% Delete Banana
-delete(banana_h)
-
-% Go up 
-T4 = [T3(1:3,1:3), [T3(1,4), T3(2,4)+0.075, T3(3,4)+0.25]'; zeros(1, 3), 1];
-robot.animateTM5WithBananaRMRC(currentQ, T3, T4, steps, deltaTime, epsilon, eStop); 
-
-T5 = [T4(1:3,1:3), [T4(1,4), T4(2,4)-0.6, T4(3,4)-0.2]'; zeros(1, 3), 1];
-robot.animateTM5WithBananaRMRC(currentQ, T4, T5, steps, deltaTime, epsilon, eStop);
-
-T5Q = robot.env.tm5700.model.getpos() 
-T6 = robot.env.tm5700.model.fkine(T5Q).T;
-T7 = T6 * trotz(-pi/2);
-robot.animateTM5WithBanana(currentQ,T6,T7,steps,eStop);
-
-robot.env.tm5700Banana.model.base = transl(1.0, 0, 0.82)* troty(pi) * trotz(pi/2) * trotx(pi);
-robot.env.tm5700Banana.model.animate(0)
-drawnow();
-
-T7Q = robot.env.tm5700.model.getpos() 
-T8 = robot.env.tm5700.model.fkine(T7Q).T;
-T9 = robot.env.tm5700.model.fkine(q0).T;
-
-robot.animateTM5(T7Q,T8,T9,steps,eStop);
 %robot.animateTM5RMRC(T7Q,T8,T9,steps,deltaTime,epsilon,eStop);
 
 % ^ Add gripper open and closing animations + work backwards to get back to a safe spot and move TM5 away
