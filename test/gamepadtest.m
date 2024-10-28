@@ -12,7 +12,8 @@ if isempty(eStop)
     eStop = serialport('COM4', 9600);
 end 
 global TM5GripperState;
-TM5GripperState = 'close';
+TM5GripperState = 'closed';
+
 % For controlling robot using HID game controller
 gamepad = env.teensyGamepad;
 kV = 0.2;

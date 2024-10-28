@@ -8,14 +8,14 @@ view(90, 10);
 fakeKnife = PlaceObject("plyFiles/Scenery/knife.ply", [0.89, -0.59, 0.86]);
 %banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
 banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
-%eStop = serialport('COM4', 9600);
-eStop = serial('COM3', 'BaudRate', 9600);  
+eStop = serialport('COM4', 9600);
+%eStop = serial('COM3', 'BaudRate', 9600);  
 env = EnvironmentLoader();
 laser = pr2Laser();
 gripperLeftState = 'closed';
 gripperRightState = 'closed';
 global TM5GripperState;
-TM5GripperState = 'close';
+TM5GripperState = 'closed';
 
 gamePadControl = false;
 
@@ -29,6 +29,7 @@ epsilon = 0.00000001;             % Threshold for detecting singularities
 
 sensor_position = [0.35, 0, 1.35]; 
 centerPoint = [1.0, 0, 0.82]; 
+
 % For IBVS Variables - Start
 pStar = [262 762 762 262;  % uTL, uTR, uBL, uBR
          762 762 262 262];  % vTL, vTR, vBL, vBR
@@ -46,8 +47,8 @@ epsilon = 0.1;
 q0_IBVS = deg2rad([90; 22.5; -105; 0; -90; 0]); % Scanning Pose - Predefined
 % For IBVS Variables - End
 
-sensor_position = [0.125, 0, 0.9]; 
-centerPoint = [0.85, 0, 0.42]; 
+%sensor_position = [0.125, 0, 0.9]; 
+%centerPoint = [0.85, 0, 0.42]; 
 xLength = centerPoint(1) - sensor_position(1);
 zLength = sensor_position(3) - centerPoint(3);
 radii = [0.08, 0.15, 0.06]; 
@@ -56,55 +57,20 @@ disp(laser_rotation);
 
 numSteps = 30;
 
-%%% RUN THESE FIRST FOR THE PR2, DO NOT MOVE
-
-% Call functions from robotControl to move pr2 
-% Move arm -> base up -> move arm -> base down
-robot.animatePR2ArmsAndGrippers(pr2RightPosH, pr2RightPos1, pr2LeftPosH, pr2LeftPos1, numSteps, eStop);
-%robot.PR2BothGrippersOpen(numSteps, eStop);
-robot.animatePR2Base(startTr, endTr, numSteps, eStop); %Move torso up
-
-% Rotate End Effector by 90d around Z
-tm5Pos2 = tm5Pos1 * trotz(pi/2);
-robot.animateTM5(currentQ,tm5Pos1,tm5Pos2,steps,eStop);
-
-% Open Gripper Here
-robot.animateTM5GripperMotion('open',eStop);
-
-tm5Pos3 = [tm5Pos2(1:3,1:3), [tm5Pos2(1,4), tm5Pos2(2,4)-0.08, tm5Pos2(3,4)-0.26]'; zeros(1, 3), 1];
-
-% Go down to banana
-robot.animateTM5RMRC(currentQ, tm5Pos2, tm5Pos3, steps, deltaTime, epsilon, eStop); 
-
-% Close Gripper Here
-robot.animateTM5GripperMotion('closed',eStop);
-
-% Delete Banana
-delete(banana_h)
-
-%Arm positions here 
-
-%Posh
-%r = [-0.100 -0.680 1.146]
-%l = [-0.100  0.680 1.146]
-%%%%%%%%%%%%%%%%%% USING transl
-%pr2RightPosH = transl(0.250, -0.680, 1.146);
-%pr2leftPosH = transl(0.250, 0.680, 1.146);
-
-%Pos1
-%pr2RightPos1 = transl(0.250, -1.001, 0.825);
-%pr2leftPos1 = transl(0.250, 1.001, 0.825);
-
-%Pos 2 is Pos 1 with Z adjustment
-%pr2RightPos1h = transl(0.250, -1.001, 1.125);
-%pr2RightPos2 = transl(0.6, -0.6, 0.87) * troty(pi/2);
-%pr2leftPos2 = transl(0.250, 1.001, 1.125);
-% Base positions for PR2 arms in the form [eye(3), translation; zeros(1, 3), 1]
-%%%%%%%%%%%%%%%%%%%%%%% PR2 Starts here 
-
 % Torso Go Up
 qStart = [0 0 0];
 startTr = robot.env.pr2Base.model.fkine(qStart);
+
+qEnd = [-0.3 0 0];
+endTr = robot.env.pr2Base.model.fkine(qEnd);
+
+% Torso Go Down
+qStart1 = [-0.3 0 0];
+qEnd1 = [0 0 0];
+
+startTr1 = robot.env.pr2Base.model.fkine(qStart1);
+endTr1 = robot.env.pr2Base.model.fkine(qEnd1);
+
 %%%%%%%%%%%%%%%%%%%%%% Using matrix form
 pr2RightPosH = [eye(3), [0.250; -0.680; 1.146]; zeros(1, 3), 1];
 pr2LeftPosH = [eye(3), [0.250; 0.680; 1.146]; zeros(1, 3), 1];
@@ -126,6 +92,62 @@ end
 % Position 2 with rotation (right arm) in the form [R, translation; zeros(1, 3), 1]
 pr2RightPos2t = [eye(3), [0.600; -0.600; 0.870]; zeros(1, 3), 1];
 pr2RightPos2 = pr2RightPos2t * troty(pi/2);
+
+%%% RUN THESE FIRST FOR THE PR2, DO NOT MOVE
+
+% Call functions from robotControl to move pr2 
+% Move arm -> base up -> move arm -> base down
+robot.animatePR2ArmsAndGrippers(pr2RightPosH, pr2RightPos1, pr2LeftPosH, pr2LeftPos1, numSteps, eStop);
+%robot.PR2BothGrippersOpen(numSteps, eStop);
+robot.animatePR2Base(startTr, endTr, numSteps, eStop); %Move torso up
+
+%Arm positions here 
+
+%Posh
+%r = [-0.100 -0.680 1.146]
+%l = [-0.100  0.680 1.146]
+%%%%%%%%%%%%%%%%%% USING transl
+%pr2RightPosH = transl(0.250, -0.680, 1.146);
+%pr2leftPosH = transl(0.250, 0.680, 1.146);
+
+%Pos1
+%pr2RightPos1 = transl(0.250, -1.001, 0.825);
+%pr2leftPos1 = transl(0.250, 1.001, 0.825);
+
+%Pos 2 is Pos 1 with Z adjustment
+%pr2RightPos1h = transl(0.250, -1.001, 1.125);
+%pr2RightPos2 = transl(0.6, -0.6, 0.87) * troty(pi/2);
+%pr2leftPos2 = transl(0.250, 1.001, 1.125);
+% Base positions for PR2 arms in the form [eye(3), translation; zeros(1, 3), 1]
+%%%%%%%%%%%%%%%%%%%%%%% PR2 Starts here 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%% TM5 Starts here %%%%%%%%%%%%%%%%%%%%%%%
+%% Start IBVS Procedure
+robot.animateTM5GripperMotion('closed',eStop);
+robot.animateTM5IBVS(q0_IBVS, pStar, P1, fps, lambda, eStop);
+
+currentQ = robot.env.tm5700.model.getpos(); 
+tm5Pos1 = robot.env.tm5700.model.fkine(currentQ).T;
+
+% Rotate End Effector by 90d around Z
+tm5Pos2 = tm5Pos1 * trotz(pi/2);
+robot.animateTM5(currentQ,tm5Pos1,tm5Pos2,steps,eStop);
+
+% Open Gripper Here
+robot.animateTM5GripperMotion('open',eStop);
+
+tm5Pos3 = [tm5Pos2(1:3,1:3), [tm5Pos2(1,4), tm5Pos2(2,4)-0.08, tm5Pos2(3,4)-0.26]'; zeros(1, 3), 1];
+
+% Go down to banana
+robot.animateTM5RMRC(currentQ, tm5Pos2, tm5Pos3, steps, deltaTime, epsilon, eStop); 
+
+% Close Gripper Here
+robot.animateTM5GripperMotion('closed',eStop);
+
+% Delete Banana
+delete(banana_h)
 
 % Go up 
 tm5Pos4 = [tm5Pos3(1:3,1:3), [tm5Pos3(1,4), tm5Pos3(2,4)+0.08, tm5Pos3(3,4)+0.26]'; zeros(1, 3), 1];
@@ -152,6 +174,7 @@ tm5Pos9 = robot.env.tm5700.model.fkine(q0_IBVS).T;
 
 robot.animateTM5(tm5Pos7Q,tm5Pos8,tm5Pos9,steps,eStop);
 % End IBVS Procedure
+%%%%%%%%%%%%%%%%%%%%%%% TM5 Ends here %%%%%%%%%%%%%%%%%%%%%%%
 
 % Start gamePadControl
 %% For controlling robot using HID game controller
@@ -179,6 +202,8 @@ if (gamePadControl)
     end
 end
 % End gamePadControl
+
+[firstCoord, lastCoord] = laser.laser_scan(sensor_position, laser_rotation, radii, centerPoint);
 
 fprintf('First Coordinate: (%.2f, %.2f, %.2f)\n', firstCoord(1), firstCoord(2), firstCoord(3));
 fprintf('Last Coordinate: (%.2f, %.2f, %.2f)\n', lastCoord(1), lastCoord(2), lastCoord(3));
