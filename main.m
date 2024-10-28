@@ -8,7 +8,8 @@ view(90, 10);
 fakeKnife = PlaceObject("plyFiles/Scenery/knife.ply", [0.89, -0.59, 0.86]);
 %banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
 banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
-eStop = serialport('COM4', 9600);
+%eStop = serialport('COM4', 9600);
+eStop = serial('COM3', 'BaudRate', 9600);  
 env = EnvironmentLoader();
 laser = pr2Laser();
 gripperLeftState = 'closed';
@@ -55,9 +56,14 @@ disp(laser_rotation);
 
 numSteps = 30;
 
-% Torso Go Up
-qStart = [0 0 0];
-startTr = robot.env.pr2Base.model.fkine(qStart);
+%%% RUN THESE FIRST FOR THE PR2, DO NOT MOVE
+
+% Call functions from robotControl to move pr2 
+% Move arm -> base up -> move arm -> base down
+robot.animatePR2ArmsAndGrippers(pr2RightPosH, pr2RightPos1, pr2LeftPosH, pr2LeftPos1, numSteps, eStop);
+%robot.PR2BothGrippersOpen(numSteps, eStop);
+robot.animatePR2Base(startTr, endTr, numSteps, eStop); %Move torso up
+
 % Rotate End Effector by 90d around Z
 tm5Pos2 = tm5Pos1 * trotz(pi/2);
 robot.animateTM5(currentQ,tm5Pos1,tm5Pos2,steps,eStop);
@@ -94,7 +100,11 @@ delete(banana_h)
 %pr2RightPos2 = transl(0.6, -0.6, 0.87) * troty(pi/2);
 %pr2leftPos2 = transl(0.250, 1.001, 1.125);
 % Base positions for PR2 arms in the form [eye(3), translation; zeros(1, 3), 1]
+%%%%%%%%%%%%%%%%%%%%%%% PR2 Starts here 
 
+% Torso Go Up
+qStart = [0 0 0];
+startTr = robot.env.pr2Base.model.fkine(qStart);
 %%%%%%%%%%%%%%%%%%%%%% Using matrix form
 pr2RightPosH = [eye(3), [0.250; -0.680; 1.146]; zeros(1, 3), 1];
 pr2LeftPosH = [eye(3), [0.250; 0.680; 1.146]; zeros(1, 3), 1];
@@ -117,11 +127,6 @@ end
 pr2RightPos2t = [eye(3), [0.600; -0.600; 0.870]; zeros(1, 3), 1];
 pr2RightPos2 = pr2RightPos2t * troty(pi/2);
 
-% Call functions from robotControl to move pr2 
-% Move arm -> base up -> move arm -> base down
-robot.animatePR2ArmsAndGrippers(pr2RightPosH, pr2RightPos1, pr2LeftPosH, pr2LeftPos1, numSteps, eStop);
-%robot.PR2BothGrippersOpen(numSteps, eStop);
-robot.animatePR2Base(startTr, endTr, numSteps, eStop); %Move torso up
 % Go up 
 tm5Pos4 = [tm5Pos3(1:3,1:3), [tm5Pos3(1,4), tm5Pos3(2,4)+0.08, tm5Pos3(3,4)+0.26]'; zeros(1, 3), 1];
 robot.animateTM5WithBananaRMRC(currentQ, tm5Pos3, tm5Pos4, steps, deltaTime, epsilon, eStop); 
