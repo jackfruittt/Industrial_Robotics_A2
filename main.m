@@ -1,19 +1,22 @@
-clc;
-clf;
+clc; clf; clear;
 
-grid on;
-hold on;
-axis([-4.5 4.5 -3.5 3.5 0 3.5]);
+grid on; hold on;
+axis([-1.8 3.5 -2.5 2.5 0 2.5]);
 
 view(90, 10);  
 % Load environment
-eStop = serial('COM3', 'BaudRate', 9600);  
-fakeKnife = PlaceObject("plyFiles/Scenery/knife.ply", [0.89, -0.59, 0.86]);
+eStop = serialport('COM4', 9600);
+
 banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
 env = EnvironmentLoader();
 laser = pr2Laser();
 gripperLeftState = 'closed';
 gripperRightState = 'closed';
+global TM5GripperState;
+TM5GripperState = 'close';
+
+gamePadControl = false;
+
 gripperRightStateKnife = 'closed';
 robot = robotControl(env);
 
@@ -24,6 +27,25 @@ epsilon = 0.00000001;             % Threshold for detecting singularities
 
 sensor_position = [0.35, 0, 1.35]; 
 centerPoint = [1.0, 0, 0.82]; 
+% For IBVS Variables - Start
+pStar = [262 762 762 262;  % uTL, uTR, uBL, uBR
+         762 762 262 262];  % vTL, vTR, vBL, vBR
+
+%     P4    P3   P2    P1
+P1 = [0.9 , 1.1, 1.1, 0.9; ... X
+      0.4, 0.4, 0.6, 0.6; ... Y
+      0.82, 0.82, 0.82, 0.82]; ... Z
+
+fps = 25;
+lambda = 0.8;
+deltaTime = 0.05;
+steps = 50;
+epsilon = 0.1;
+q0_IBVS = deg2rad([90; 22.5; -105; 0; -90; 0]); % Scanning Pose - Predefined
+% For IBVS Variables - End
+
+sensor_position = [0.125, 0, 0.9]; 
+centerPoint = [0.85, 0, 0.42]; 
 xLength = centerPoint(1) - sensor_position(1);
 zLength = sensor_position(3) - centerPoint(3);
 radii = [0.08, 0.15, 0.06]; 
@@ -35,16 +57,23 @@ numSteps = 30;
 % Torso Go Up
 qStart = [0 0 0];
 startTr = robot.env.pr2Base.model.fkine(qStart);
+% Rotate End Effector by 90d around Z
+tm5Pos2 = tm5Pos1 * trotz(pi/2);
+robot.animateTM5(currentQ,tm5Pos1,tm5Pos2,steps,eStop);
 
-qEnd = [-0.3 0 0];
-endTr = robot.env.pr2Base.model.fkine(qEnd);
+% Open Gripper Here
+robot.animateTM5GripperMotion('open',eStop);
 
-% Torso Go Down
-qStart1 = [-0.3 0 0];
-qEnd1 = [0 0 0];
+tm5Pos3 = [tm5Pos2(1:3,1:3), [tm5Pos2(1,4), tm5Pos2(2,4)-0.08, tm5Pos2(3,4)-0.26]'; zeros(1, 3), 1];
 
-startTr1 = robot.env.pr2Base.model.fkine(qStart1);
-endTr1 = robot.env.pr2Base.model.fkine(qEnd1);
+% Go down to banana
+robot.animateTM5RMRC(currentQ, tm5Pos2, tm5Pos3, steps, deltaTime, epsilon, eStop); 
+
+% Close Gripper Here
+robot.animateTM5GripperMotion('closed',eStop);
+
+% Delete Banana
+delete(banana_h)
 
 %Arm positions here 
 
@@ -92,9 +121,58 @@ pr2RightPos2 = pr2RightPos2t * troty(pi/2);
 robot.animatePR2ArmsAndGrippers(pr2RightPosH, pr2RightPos1, pr2LeftPosH, pr2LeftPos1, numSteps, eStop);
 %robot.PR2BothGrippersOpen(numSteps, eStop);
 robot.animatePR2Base(startTr, endTr, numSteps, eStop); %Move torso up
+% Go up 
+tm5Pos4 = [tm5Pos3(1:3,1:3), [tm5Pos3(1,4), tm5Pos3(2,4)+0.08, tm5Pos3(3,4)+0.26]'; zeros(1, 3), 1];
+robot.animateTM5WithBananaRMRC(currentQ, tm5Pos3, tm5Pos4, steps, deltaTime, epsilon, eStop); 
 
-%Scan for the banana
-[firstCoord, lastCoord] = laser.laser_scan(sensor_position, laser_rotation, radii, centerPoint);
+tm5Pos5 = [tm5Pos4(1:3,1:3), [tm5Pos4(1,4), tm5Pos4(2,4)-0.6, tm5Pos4(3,4)-0.2]'; zeros(1, 3), 1];
+robot.animateTM5WithBananaRMRC(currentQ, tm5Pos4, tm5Pos5, steps, deltaTime, epsilon, eStop);
+
+tm5Pos5Q = robot.env.tm5700.model.getpos(); 
+tm5Pos6 = robot.env.tm5700.model.fkine(tm5Pos5Q).T;
+tm5Pos7 = tm5Pos6 * trotz(-pi/2);
+% zeros(1,6) ~ currentQ
+robot.animateTM5WithBanana(currentQ,tm5Pos6,tm5Pos7,steps,eStop);
+
+robot.animateTM5GripperMotion('open',eStop);
+
+robot.env.tm5700Banana.model.base = transl(1.0, 0, 0.82)* troty(pi) * trotz(pi/2) * trotx(pi);
+robot.env.tm5700Banana.model.animate(0)
+drawnow();
+
+tm5Pos7Q = robot.env.tm5700.model.getpos(); 
+tm5Pos8 = robot.env.tm5700.model.fkine(tm5Pos7Q).T;
+tm5Pos9 = robot.env.tm5700.model.fkine(q0_IBVS).T;
+
+robot.animateTM5(tm5Pos7Q,tm5Pos8,tm5Pos9,steps,eStop);
+% End IBVS Procedure
+
+% Start gamePadControl
+%% For controlling robot using HID game controller
+if (gamePadControl)
+    gamepad = env.teensyGamepad; %#ok<UNRCH>
+    kV = 0.2;
+    kW = 1.0;
+    duration = 300;
+    dt = 0.1;
+    lambda_gamepad = 0.1;
+
+    % Change this value to swap between control modes
+    controlPreference = 0;
+
+    if controlPreference == 1
+        disp('Selected Control:  EndEffector')
+        savedQ = robot.gamepadEndEffectorFrameControl(gamepad, lambda_gamepad, kV, kW, duration, dt, 'TM5', eStop);
+        disp('Control session complete. Saved configurations:');
+        disp(savedQ);
+    elseif controlPreference == 2
+        disp('Selected Control:  WorldFrame')
+        savedQ = robot.gamepadWorldFrameControl(gamepad, lambda_gamepad, kV, kW, duration, dt, 'TM5', eStop);
+        disp('Control session complete. Saved configurations:');
+        disp(savedQ);
+    end
+end
+% End gamePadControl
 
 fprintf('First Coordinate: (%.2f, %.2f, %.2f)\n', firstCoord(1), firstCoord(2), firstCoord(3));
 fprintf('Last Coordinate: (%.2f, %.2f, %.2f)\n', lastCoord(1), lastCoord(2), lastCoord(3));
