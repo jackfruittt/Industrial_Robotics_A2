@@ -69,7 +69,9 @@ function [vertex,face,faceNormals] = RectangularPrism(lower,upper,plotOptions,ax
     if isfield(plotOptions,'plotFaces') && plotOptions.plotFaces
         tcolor = [.2 .2 .8];
         
-        patch('Faces',face,'Vertices',vertex,'FaceVertexCData',tcolor,'FaceColor','flat','lineStyle','none');
+        patch('Faces',face,'Vertices',vertex,'FaceVertexCData',tcolor,...
+                'FaceColor','flat','lineStyle','none','FaceAlpha',0.1);
+
     end
     
     end

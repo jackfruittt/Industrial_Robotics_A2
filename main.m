@@ -5,9 +5,10 @@ axis([-1.8 3.5 -2.5 2.5 0 2.5]);
 
 view(90, 10);  
 % Load environment
-eStop = serialport('COM4', 9600);
-
+fakeKnife = PlaceObject("plyFiles/Scenery/knife.ply", [0.89, -0.59, 0.86]);
+%banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
 banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
+eStop = serialport('COM4', 9600);
 env = EnvironmentLoader();
 laser = pr2Laser();
 gripperLeftState = 'closed';
@@ -262,8 +263,10 @@ q49 = [-0.43 1.9 -3.2 1.86 -2.63 1.65 -2.94];
 q50 = [-0.49 1.9 -3.2 1.86 -2.63 1.65 -2.94];
 qWpmat = [pr2LeftWayPosStart; q1; q2; q3; q4; q5; q6; q7; q8; q9; q10; q11; q12; q13; q14; q15; q16; q17; q18; q19; q20; q21; q22; q23];
 qWpmat1 = [currentQ; q25; q26; q27; q28; q29; q30; q31; q32; q33; q34; q35; q36; q37; q38; q39; q40; q41; q42; q43; q44; q45];
+qWpmat2 = [q45; q46; q47; q48; q49; q50];
 robot.animatePR2RightArmsAndGrippersWithWaypointsKnife(qWpmat1, 150, eStop);
 robot.animatePR2LeftArmsAndGrippersWithWaypoints(qWpmat, 150, eStop);
+robot.animatePR2RightArmsAndGrippersWithWaypointsKnife(qWpmat2, 150, eStop);
 %robot.animatepr2RightHybridControl(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
 %robot.animatepr2RightRMRCNullSpace(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, 0);
 %robot.animatepr2RightRMRCNullSpace(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, 0.4);
