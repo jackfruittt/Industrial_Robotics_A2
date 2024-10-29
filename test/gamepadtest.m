@@ -24,7 +24,7 @@ lambda = 0.1;
 disp('environment loaded, testing gamepad')
 
 % Change this value to swap between control modes
-controlPreference = 1;
+controlPreference = 0;
 
 if controlPreference == 1
     disp('Selected Control:  EndEffector')

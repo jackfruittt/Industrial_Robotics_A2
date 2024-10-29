@@ -8,7 +8,7 @@ view(90, 10);
 fakeKnife = PlaceObject("plyFiles/Scenery/knife.ply", [0.89, -0.59, 0.86]);
 %banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
 banana_h = PlaceObject('plyFiles/Scenery/Banana.ply',[1.0, 0.5, 0.82]);
-eStop = serialport('COM4', 9600);
+eStop = serialport('COM5', 9600);
 %eStop = serial('COM3', 'BaudRate', 9600);  
 env = EnvironmentLoader();
 laser = pr2Laser();
@@ -17,15 +17,16 @@ gripperRightState = 'closed';
 global TM5GripperState;
 TM5GripperState = 'closed';
 
-gamePadControl = false;
+gamePadControl = true;
 
 gripperRightStateKnife = 'closed';
 robot = robotControl(env);
 
 dt = 0.05;                    % Time step
 steps = 50;                   % Number of steps
-lambda = 0.01;                % Damping factor for singularity handling
+plambda = 0.01;                % Damping factor for singularity handling
 epsilon = 0.00000001;             % Threshold for detecting singularities
+%epsilon = 0.5;
 
 sensor_position = [0.35, 0, 1.35]; 
 centerPoint = [1.0, 0, 0.82]; 
@@ -228,7 +229,7 @@ robot.animateRightPR2ArmsAndGrippersWithKnife(pr2RightPos1h, bananaRTr, numSteps
 robot.animateRightPR2ArmsAndGrippersWithKnife(bananaRTr, pr2RightPos3, numSteps, eStop);
 %robot.animatePR2RightArmRMRC(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, eStop);
 %robot.animatePR2RightArmRMRC(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
-robot.animatepr2RightHybridControl(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, eStop);
+robot.animatepr2RightHybridControl(pr2RightPos3, pr2RightPos4, 100, dt, plambda, epsilon, eStop);
 currentQ = env.pr2RightArm.model.getpos();
 disp('Current joint values for PR2 right arm:');
 disp(currentQ);
