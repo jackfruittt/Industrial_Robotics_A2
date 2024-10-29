@@ -181,23 +181,7 @@ classdef PR2ControlGUI
 
             function openGamepadGUI()
                 fig3 = figure('Name','TM5 Gamepad Control GUI', 'NumberTitle', 'off', ...
-                    'Position', [100, 100, 600, 350]);
-
-                % Display whether or not gamepad is in use 
-                uicontrol('Style', 'text', 'Parent', fig3, 'String', 'Gamepad Active: ', ...
-                'Position', [20, 250, 200, 30], 'FontSize', 12, 'FontWeight', 'bold', ...
-                'ForegroundColor', [0 0 0], 'BackgroundColor', [0.94 0.94 0.94], ...
-                'HorizontalAlignment', 'left');
-
-                obj.statusTextBox = uicontrol('Style', 'text', 'Parent', fig3, ...
-                'Position', [150, 250, 50, 30], 'FontSize', 12, 'FontWeight', 'bold', ...
-                'ForegroundColor', [0 0 0], 'BackgroundColor', [0.94 0.94 0.94], ...
-                'HorizontalAlignment', 'left');
-
-                uicontrol('Style', 'text', 'Parent', fig3, 'String', 'B8 - Exit Gamepad Control', ...
-                'Position', [230, 280, 400, 30], 'FontSize', 12, 'FontWeight', 'bold', ...
-                'ForegroundColor', [0 0 0], 'BackgroundColor', [0.94 0.94 0.94], ...
-                'HorizontalAlignment', 'left');
+                    'Position', [100, 100, 600, 300]);
                 
                 % Push button to detect selection
                 uicontrol('Style', 'pushbutton', 'Parent', fig3, 'String','Gamepad Jacobe Control', ...
@@ -218,15 +202,9 @@ classdef PR2ControlGUI
                 'Position', [280, 120, 200, 30], 'FontSize', 12, 'FontWeight', 'bold', ...
                 'ForegroundColor', [0 0 0], 'BackgroundColor', [0.94 0.94 0.94], ...
                 'HorizontalAlignment', 'left');
-
-                % Reset Q back to default text
-                uicontrol('Style', 'text', 'Parent', fig3, 'String', 'B1 - Go back to starting position', ...
-                'Position', [230, 310, 400, 30], 'FontSize', 12, 'FontWeight', 'bold', ...
-                'ForegroundColor', [0 0 0], 'BackgroundColor', [0.94 0.94 0.94], ...
-                'HorizontalAlignment', 'left');
                 
                 % Show Current Q after pressing button 3 
-                uicontrol('Style', 'text', 'Parent', fig3, 'String', 'B3 - Extract Q Values and Pose', ...
+                uicontrol('Style', 'text', 'Parent', fig3, 'String', 'Press B3 to Extract Q Values', ...
                 'Position', [230, 250, 400, 30], 'FontSize', 12, 'FontWeight', 'bold', ...
                 'ForegroundColor', [0 0 0], 'BackgroundColor', [0.94 0.94 0.94], ...
                 'HorizontalAlignment', 'left');
@@ -242,15 +220,15 @@ classdef PR2ControlGUI
                     'HorizontalAlignment', 'left');
 
                 % Show End Effector Position and Rotation as a 4x4 
-                uicontrol('Style', 'text', 'Parent', fig3, 'String', 'Pose: ', ...
+                uicontrol('Style', 'text', 'Parent', fig3, 'String', 'End Effector Pose: ', ...
                 'Position', [230, 60, 200, 30], 'FontSize', 12, 'FontWeight', 'bold', ...
                 'ForegroundColor', [0 0 0], 'BackgroundColor', [0.94 0.94 0.94], ...
                 'HorizontalAlignment', 'left');
 
                 obj.poseTextBox = uicontrol('Style', 'edit', 'Parent', fig3, ...
-                    'Position', [300, 20, 280, 100], 'FontSize', 12, 'FontWeight', 'bold', ...
+                    'Position', [380, 20, 200, 100], 'FontSize', 12, 'FontWeight', 'bold', ...
                     'ForegroundColor', [0 0 0], 'BackgroundColor', [1 1 1], ...
-                    'Max', 2, 'HorizontalAlignment', 'left');
+                    'Max'HorizontalAlignment', 'left');
 
             end
 
@@ -258,18 +236,16 @@ classdef PR2ControlGUI
             function jacobeGamepad()
                 disp('Selected Control for TM5: Jacobe');
                 set(obj.selectedModeTextBox, 'String', 'Jacobe');
-                set(obj.statusTextBox, 'String', 'Yes');
                 runGamepadControl(1)
             end
 
             function jacob0Gamepad()
                 disp('Selected Control for TM5: Jacob0');
                 set(obj.selectedModeTextBox, 'String', 'Jacob0');
-                set(obj.statusTextBox, 'String', 'Yes');
                 runGamepadControl(0)
             end
 
-            % From gamepadtest, modified for gui implementation
+
             function runGamepadControl(jacobianSelection)
                 % Gripper offset
                 tm5GripperOffset = troty(-pi/2) * trotx(-pi/2) * transl(0.01, 0, 0);
@@ -306,7 +282,7 @@ classdef PR2ControlGUI
                         J = obj.tm5.jacob0(qTM5);
                     end
                     
-                    % Calculate inverse Jacobian with predefined lambda
+                    % Calculate inverse Jacobian
                     invJ = inv((J*J')+lambda^2*eye(6))*J';
                     
                     % Compute q velocities 
@@ -332,7 +308,7 @@ classdef PR2ControlGUI
                         viewFriendlyQTM5 = sprintf('%.4f %.4f %.4f %.4f %.4f %.4f', qTM5);
                         tr = obj.tm5.fkine(qTM5);
                         % tr as a string
-                        trStr = sprintf('%.4f %.4f %.4f %.4f\n%.4f %.4f %.4f %.4f\n%.4f %.4f %.4f %.4f\n%.4f %.4f %.4f %.4f', tr.T');
+                        trStr = sprintf('%.4f %.4f %.4f %.4f\n%.4f %.4f %.4f %.4f\n%.4f %.4f %.4f %.4f\n%.4f %.4f %.4f %.4f', tr.T);
 
                         %disp(['Saved Configuration ', num2str(qCount), ': ', viewFriendlyQTM5]);
                         % Update the textbox with the latest configuration
@@ -342,7 +318,6 @@ classdef PR2ControlGUI
                     
                     % Exit gamepad control
                     if (buttons(8))
-                        set(obj.statusTextBox, 'String', 'No');
                         disp('Exiting Gamepad Control ...')
                         break;
                     end
