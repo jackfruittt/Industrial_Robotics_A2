@@ -1,0 +1,12 @@
+clear; clc;
+load("qCombined.mat")
+
+robot = UR3();
+
+%robot.model.animate([0 -pi/2 0 -pi/2 0 0])
+
+
+for i = 1:427
+    robot.model.animate(qCombined(i,:))
+    pause(0.1)
+end

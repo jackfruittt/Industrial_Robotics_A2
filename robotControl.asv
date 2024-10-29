@@ -893,12 +893,28 @@ classdef robotControl
                 fprintf('currentQ: %.3f %.3f %.3f %.3f %.3f %.3f\n', qPrer(i,:));
                 fprintf('q2: %.3f %.3f %.3f %.3f %.3f %.3f\n', q2);
 
+                save("qmat")
+
                 if qPrer(i,:) == q2
                     disp('Animating TM5 from q1 to q2 finished');
                 end
                 
                 robot.animatePR2Grippers(robot.env.tm5700GripperL, robot.env.tm5700GripperR, TM5GripperState);
-
+                
+                %Build Gripper and Modify later
+                %T_leftEndEffector = robot.env.pr2Left.model.fkine(qPrel(i, :)).T;
+                %tRightEndEffector = robot.env.pr2Right.model.fkine(qPrer(i, :)).T;
+                
+                %Ditto ^^
+                %robot.env.gripperl1.model.base = T_leftEndEffector  * offset;
+                %robot.env.gripperr1.model.base = T_leftEndEffector * offset;
+                %robot.env.gripperl2.model.base = tRightEndEffector * offset;
+                %robot.env.gripperr2.model.base = tRightEndEffector * offset;
+                
+                % Animate grippers based on their current state
+                %robot.animatePR2Grippers(robot.env.gripperl1, robot.env.gripperr1, PR2GripperLeftState);
+                %robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
+                
                 drawnow(); % Update the figure
             end
         end
@@ -944,7 +960,7 @@ classdef robotControl
                 fprintf('q1: %.3f %.3f %.3f %.3f %.3f %.3f\n', q1);
                 fprintf('currentQ: %.3f %.3f %.3f %.3f %.3f %.3f\n', qPrer(i,:));
                 fprintf('q2: %.3f %.3f %.3f %.3f %.3f %.3f\n', q2);
-                
+
                 if qPrer(i,:) == q2
                     disp('Animating TM5 from q1 to q2 finished');
                 end
@@ -1700,7 +1716,7 @@ classdef robotControl
 
                 drawnow();
 
-                while (toc < dt*steps)
+                while (toc < dt*n)
                     robot.checkPause(eStop)
                 end
             end

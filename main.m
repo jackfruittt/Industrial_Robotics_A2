@@ -122,15 +122,22 @@ robot.animatePR2Base(startTr, endTr, numSteps, eStop); %Move torso up
 
 %%%%%%%%%%%%%%%%%%%%%%% TM5 Starts here %%%%%%%%%%%%%%%%%%%%%%%
 %% Start IBVS Procedure
+
+% Animating from starting configuration to a predefined scan pose (q0_IBVS)
+qStart = robot.env.tm5700.model.getpos();
+trStart = robot.env.tm5700.model.fkine(qStart);
+trEnd = robot.env.tm5700.model.fkine(q0_IBVS);
+robot.animateTM5qtoq(qStart, q0_IBVS',steps, eStop);
+
 robot.animateTM5GripperMotion('closed',eStop);
-robot.animateTM5IBVS(q0_IBVS, pStar, P1, fps, lambda, eStop);
+robot.animateTM5IBVS(q0_IBVS, pStar, P1, fps, lambda, eStop); 
 
 currentQ = robot.env.tm5700.model.getpos(); 
 tm5Pos1 = robot.env.tm5700.model.fkine(currentQ).T;
 
 % Rotate End Effector by 90d around Z
 tm5Pos2 = tm5Pos1 * trotz(pi/2);
-robot.animateTM5(currentQ,tm5Pos1,tm5Pos2,steps,eStop);
+robot.animateTM5(currentQ,tm5Pos1,tm5Pos2,steps,eStop); 
 
 % Open Gripper Here
 robot.animateTM5GripperMotion('open',eStop);
@@ -151,13 +158,13 @@ tm5Pos4 = [tm5Pos3(1:3,1:3), [tm5Pos3(1,4), tm5Pos3(2,4)+0.08, tm5Pos3(3,4)+0.26
 robot.animateTM5WithBananaRMRC(currentQ, tm5Pos3, tm5Pos4, steps, deltaTime, epsilon, eStop); 
 
 tm5Pos5 = [tm5Pos4(1:3,1:3), [tm5Pos4(1,4), tm5Pos4(2,4)-0.6, tm5Pos4(3,4)-0.2]'; zeros(1, 3), 1];
-robot.animateTM5WithBananaRMRC(currentQ, tm5Pos4, tm5Pos5, steps, deltaTime, epsilon, eStop);
+robot.animateTM5WithBananaRMRC(currentQ, tm5Pos4, tm5Pos5, steps, deltaTime, epsilon, eStop); 
 
 tm5Pos5Q = robot.env.tm5700.model.getpos(); 
 tm5Pos6 = robot.env.tm5700.model.fkine(tm5Pos5Q).T;
 tm5Pos7 = tm5Pos6 * trotz(-pi/2);
 % zeros(1,6) ~ currentQ
-robot.animateTM5WithBanana(currentQ,tm5Pos6,tm5Pos7,steps,eStop);
+robot.animateTM5WithBanana(currentQ,tm5Pos6,tm5Pos7,steps,eStop); 
 
 robot.animateTM5GripperMotion('open',eStop);
 
@@ -169,7 +176,7 @@ tm5Pos7Q = robot.env.tm5700.model.getpos();
 tm5Pos8 = robot.env.tm5700.model.fkine(tm5Pos7Q).T;
 tm5Pos9 = robot.env.tm5700.model.fkine(q0_IBVS).T;
 
-robot.animateTM5(tm5Pos7Q,tm5Pos8,tm5Pos9,steps,eStop);
+robot.animateTM5(tm5Pos7Q,tm5Pos8,tm5Pos9,steps,eStop); 
 % End IBVS Procedure
 %%%%%%%%%%%%%%%%%%%%%%% TM5 Ends here %%%%%%%%%%%%%%%%%%%%%%%
 

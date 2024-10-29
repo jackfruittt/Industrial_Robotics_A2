@@ -9,7 +9,7 @@ env = EnvironmentLoader();
 robot = robotControl(env);
 
 if isempty(eStop)
-    eStop = serialport('COM4', 9600);
+    eStop = serialport('COM5', 9600);
 end 
 global TM5GripperState;
 TM5GripperState = 'closed';
