@@ -22,14 +22,7 @@ gamePadControl = true;
 gripperRightStateKnife = 'closed';
 robot = robotControl(env);
 
-dt = 0.05;                    % Time step
-steps = 50;                   % Number of steps
-plambda = 0.01;                % Damping factor for singularity handling
-epsilon = 0.00000001;             % Threshold for detecting singularities
-%epsilon = 0.5;
-
-sensor_position = [0.35, 0, 1.35]; 
-centerPoint = [1.0, 0, 0.82]; 
+ 
 
 % For IBVS Variables - Start
 pStar = [262 762 762 262;  % uTL, uTR, uBL, uBR
@@ -48,8 +41,16 @@ epsilon = 0.1;
 q0_IBVS = deg2rad([90; 22.5; -105; 0; -90; 0]); % Scanning Pose - Predefined
 % For IBVS Variables - End
 
-%sensor_position = [0.125, 0, 0.9]; 
-%centerPoint = [0.85, 0, 0.42]; 
+
+%%%%%%%%%%%%%%%%%%%%%%% PR2 Starts here 
+
+dt = 0.05;                    % Time step
+steps = 50;                   % Number of steps
+plambda = 0.01;                % Damping factor for singularity handling
+pepsilon = 0.00000001;             % Threshold for detecting singularities
+
+sensor_position = [0.35, 0, 1.35]; 
+centerPoint = [1.0, 0, 0.82]; 
 xLength = centerPoint(1) - sensor_position(1);
 zLength = sensor_position(3) - centerPoint(3);
 radii = [0.08, 0.15, 0.06]; 
@@ -71,6 +72,25 @@ qEnd1 = [0 0 0];
 
 startTr1 = robot.env.pr2Base.model.fkine(qStart1);
 endTr1 = robot.env.pr2Base.model.fkine(qEnd1);
+
+%Arm positions here 
+
+%Posh
+%r = [-0.100 -0.680 1.146]
+%l = [-0.100  0.680 1.146]
+%%%%%%%%%%%%%%%%%% USING transl
+%pr2RightPosH = transl(0.250, -0.680, 1.146);
+%pr2leftPosH = transl(0.250, 0.680, 1.146);
+
+%Pos1
+%pr2RightPos1 = transl(0.250, -1.001, 0.825);
+%pr2leftPos1 = transl(0.250, 1.001, 0.825);
+
+%Pos 2 is Pos 1 with Z adjustment
+%pr2RightPos1h = transl(0.250, -1.001, 1.125);
+%pr2RightPos2 = transl(0.6, -0.6, 0.87) * troty(pi/2);
+%pr2leftPos2 = transl(0.250, 1.001, 1.125);
+% Base positions for PR2 arms in the form [eye(3), translation; zeros(1, 3), 1]
 
 %%%%%%%%%%%%%%%%%%%%%% Using matrix form
 pr2RightPosH = [eye(3), [0.250; -0.680; 1.146]; zeros(1, 3), 1];
@@ -94,35 +114,11 @@ end
 pr2RightPos2t = [eye(3), [0.600; -0.600; 0.870]; zeros(1, 3), 1];
 pr2RightPos2 = pr2RightPos2t * troty(pi/2);
 
-%%% RUN THESE FIRST FOR THE PR2, DO NOT MOVE
-
 % Call functions from robotControl to move pr2 
 % Move arm -> base up -> move arm -> base down
 robot.animatePR2ArmsAndGrippers(pr2RightPosH, pr2RightPos1, pr2LeftPosH, pr2LeftPos1, numSteps, eStop);
 %robot.PR2BothGrippersOpen(numSteps, eStop);
 robot.animatePR2Base(startTr, endTr, numSteps, eStop); %Move torso up
-
-%Arm positions here 
-
-%Posh
-%r = [-0.100 -0.680 1.146]
-%l = [-0.100  0.680 1.146]
-%%%%%%%%%%%%%%%%%% USING transl
-%pr2RightPosH = transl(0.250, -0.680, 1.146);
-%pr2leftPosH = transl(0.250, 0.680, 1.146);
-
-%Pos1
-%pr2RightPos1 = transl(0.250, -1.001, 0.825);
-%pr2leftPos1 = transl(0.250, 1.001, 0.825);
-
-%Pos 2 is Pos 1 with Z adjustment
-%pr2RightPos1h = transl(0.250, -1.001, 1.125);
-%pr2RightPos2 = transl(0.6, -0.6, 0.87) * troty(pi/2);
-%pr2leftPos2 = transl(0.250, 1.001, 1.125);
-% Base positions for PR2 arms in the form [eye(3), translation; zeros(1, 3), 1]
-%%%%%%%%%%%%%%%%%%%%%%% PR2 Starts here 
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%% TM5 Starts here %%%%%%%%%%%%%%%%%%%%%%%
 %% Start IBVS Procedure
@@ -204,6 +200,9 @@ if (gamePadControl)
 end
 % End gamePadControl
 
+
+
+%Scan for the banana
 [firstCoord, lastCoord] = laser.laser_scan(sensor_position, laser_rotation, radii, centerPoint);
 
 fprintf('First Coordinate: (%.2f, %.2f, %.2f)\n', firstCoord(1), firstCoord(2), firstCoord(3));
@@ -229,7 +228,7 @@ robot.animateRightPR2ArmsAndGrippersWithKnife(pr2RightPos1h, bananaRTr, numSteps
 robot.animateRightPR2ArmsAndGrippersWithKnife(bananaRTr, pr2RightPos3, numSteps, eStop);
 %robot.animatePR2RightArmRMRC(pr2RightPos3, pr2RightPos4, 100, dt, lambda, epsilon, eStop);
 %robot.animatePR2RightArmRMRC(pr2RightPos4, pr2RightPos3, 100, dt, lambda, epsilon, eStop);
-robot.animatepr2RightHybridControl(pr2RightPos3, pr2RightPos4, 100, dt, plambda, epsilon, eStop);
+robot.animatepr2RightHybridControl(pr2RightPos3, pr2RightPos4, 100, dt, plambda, pepsilon, eStop);
 currentQ = env.pr2RightArm.model.getpos();
 disp('Current joint values for PR2 right arm:');
 disp(currentQ);
