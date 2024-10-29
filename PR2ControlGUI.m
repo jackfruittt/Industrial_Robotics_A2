@@ -292,7 +292,7 @@ classdef PR2ControlGUI
                     vx = kV * gamepadRemoveStickDrift(axes(1), stickDriftThreshold);
                     vy = kV * gamepadRemoveStickDrift(axes(2), stickDriftThreshold);
                     vz = kV * (buttons(4) - buttons(2));
-                    wx = kW * gamepadRemoveStickDrift(axes(2), stickDriftThreshold);
+                    wx = kW * gamepadRemoveStickDrift(axes(3), stickDriftThreshold);
                     wy = kW * gamepadRemoveStickDrift(axes(4), stickDriftThreshold);
                     wz = kW*(buttons(9) - buttons(7));
                     
