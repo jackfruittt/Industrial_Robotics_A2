@@ -893,28 +893,12 @@ classdef robotControl
                 fprintf('currentQ: %.3f %.3f %.3f %.3f %.3f %.3f\n', qPrer(i,:));
                 fprintf('q2: %.3f %.3f %.3f %.3f %.3f %.3f\n', q2);
 
-                save("qmat")
-
                 if qPrer(i,:) == q2
                     disp('Animating TM5 from q1 to q2 finished');
                 end
                 
                 robot.animatePR2Grippers(robot.env.tm5700GripperL, robot.env.tm5700GripperR, TM5GripperState);
-                
-                %Build Gripper and Modify later
-                %T_leftEndEffector = robot.env.pr2Left.model.fkine(qPrel(i, :)).T;
-                %tRightEndEffector = robot.env.pr2Right.model.fkine(qPrer(i, :)).T;
-                
-                %Ditto ^^
-                %robot.env.gripperl1.model.base = T_leftEndEffector  * offset;
-                %robot.env.gripperr1.model.base = T_leftEndEffector * offset;
-                %robot.env.gripperl2.model.base = tRightEndEffector * offset;
-                %robot.env.gripperr2.model.base = tRightEndEffector * offset;
-                
-                % Animate grippers based on their current state
-                %robot.animatePR2Grippers(robot.env.gripperl1, robot.env.gripperr1, PR2GripperLeftState);
-                %robot.animatePR2Grippers(robot.env.gripperl2, robot.env.gripperr2, PR2GripperRightState);
-                
+
                 drawnow(); % Update the figure
             end
         end
@@ -960,7 +944,7 @@ classdef robotControl
                 fprintf('q1: %.3f %.3f %.3f %.3f %.3f %.3f\n', q1);
                 fprintf('currentQ: %.3f %.3f %.3f %.3f %.3f %.3f\n', qPrer(i,:));
                 fprintf('q2: %.3f %.3f %.3f %.3f %.3f %.3f\n', q2);
-
+                
                 if qPrer(i,:) == q2
                     disp('Animating TM5 from q1 to q2 finished');
                 end
@@ -1255,7 +1239,7 @@ classdef robotControl
             end
         end
 
-        function animateTM5IBVS(robot, q0, pStar, P, fps, lambda, eStop)
+        function animateTM5IBVS(robot, q0, pStar, P, fps, epsilon, eStop)
             % Based on Week 10 Theory / Lab
             global TM5GripperState;
             qDotLim = [-0.5 0.5];
@@ -1313,7 +1297,7 @@ classdef robotControl
             
             steps = 0; 
             errorThreshold = [10, 2000]; % Set pixel error value 
-            depth = mean(P(1, :)); % Estimate depth 
+            depth = mean(P(3, :)); % Estimate depth 
         
             while true
                 robot.checkPause(eStop);
@@ -1347,12 +1331,20 @@ classdef robotControl
                     disp('Error too large. Exiting...');
                     break;
                 end
-                
+
+                J_robot = robot.env.tm5700.model.jacobe(q0); % jacobe for end effector frame
+                m(i) = sqrt(det(J_robot*J_robot'));
+                if m(i) < epsilon
+                    lambda = (1 - m(i)/epsilon)*5E-2; % Damping gets larger as m(i) goes to 0 (singularity)
+                else
+                    lambda = 0; % No damping applied
+                end
+
                 % Compute the velocity of camera in camera frame
                 v = lambda * pinv(J_image) * error;
 
-                J_robot = robot.env.tm5700.model.jacobe(q0); % jacobe for end effector frame
-                invJ_robot = pinv(J_robot);
+                % Calculate inverse jacobian
+                invJ_robot = inv(J_robot'*J_robot + lambda *eye(6))*J_robot';
         
                 % Calculate joint velocities using computed velocity and the pseudo inv robot jacobian
                 qDot = invJ_robot * v;
@@ -1716,7 +1708,7 @@ classdef robotControl
 
                 drawnow();
 
-                while (toc < dt*n)
+                while (toc < dt*steps)
                     robot.checkPause(eStop)
                 end
             end

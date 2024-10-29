@@ -1297,7 +1297,7 @@ classdef robotControl
             
             steps = 0; 
             errorThreshold = [10, 2000]; % Set pixel error value 
-            depth = mean(P(1, :)); % Estimate depth 
+            depth = mean(P(3, :)); % Estimate depth 
         
             while true
                 robot.checkPause(eStop);
