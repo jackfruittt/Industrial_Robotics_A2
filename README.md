@@ -1,5 +1,7 @@
 # Industrial_Robotics_A2
-Assignment 2 code for 2 robots controlled via matlab
+
+This project is for 2024 Industrial Robotics 41013. The code will simulate two robots, the TM5 and PR2 in a kitchen environment to automously work together to prepare ingredients.
+![Image Alt Text](https://tm-robot.oss-cn-hongkong.aliyuncs.com/wp-content/uploads/2022/12/Product-TM5700_img.png)
 
 # Prior to running and code
 
